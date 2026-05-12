@@ -1,43 +1,42 @@
-// db.js
-// Banco Nexus - Conexion modular y reutilizable a MongoDB
-// Importar con: const { getDB, conectar, cerrar } = require('./db');
+// Banco Nexus - reusable MongoDB connection module.
 
 const { MongoClient } = require('mongodb');
 
 const URI = process.env.MONGO_URI || 'mongodb://localhost:27017';
 const DB_NAME = process.env.DB_NAME || 'banco_nexus';
 
-let clienteDB = null;
+let databaseClient = null;
 let db = null;
 
-async function conectar() {
-  if (db) return db; // ya conectado, reutilizar
-  clienteDB = new MongoClient(URI, {
+async function connect() {
+  if (db) return db;
+
+  databaseClient = new MongoClient(URI, {
     serverSelectionTimeoutMS: 5000,
     connectTimeoutMS: 10000,
   });
-  await clienteDB.connect();
-  db = clienteDB.db(DB_NAME);
-  console.log(`✅ MongoDB conectado: ${URI} → ${DB_NAME}`);
+
+  await databaseClient.connect();
+  db = databaseClient.db(DB_NAME);
+  console.log(`MongoDB conectado: ${URI} -> ${DB_NAME}`);
   return db;
 }
 
-function getDB() {
-  if (!db) throw new Error('Base de datos no inicializada. Llama a conectar() primero.');
+function getDb() {
+  if (!db) throw new Error('Base de datos no inicializada. Llama a connect() primero.');
   return db;
 }
 
-async function cerrar() {
-  if (clienteDB) {
-    await clienteDB.close();
+async function close() {
+  if (databaseClient) {
+    await databaseClient.close();
     db = null;
-    clienteDB = null;
-    console.log('🔌 Conexion MongoDB cerrada.');
+    databaseClient = null;
+    console.log('Conexion MongoDB cerrada.');
   }
 }
 
-// Cierre limpio al terminar el proceso
-process.on('SIGINT', async () => { await cerrar(); process.exit(0); });
-process.on('SIGTERM', async () => { await cerrar(); process.exit(0); });
+process.on('SIGINT', async () => { await close(); process.exit(0); });
+process.on('SIGTERM', async () => { await close(); process.exit(0); });
 
-module.exports = { conectar, getDB, cerrar };
+module.exports = { connect, getDb, close };

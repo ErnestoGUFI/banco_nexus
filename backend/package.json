@@ -5,7 +5,7 @@
   "main": "server.js",
   "scripts": {
     "start": "node server.js",
-    "init-db": "node crearBaseDeDatos.js",
+    "init-db": "node ../database/seed.js",
     "dev": "nodemon server.js"
   },
   "dependencies": {
