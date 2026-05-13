@@ -1,10 +1,8 @@
-// server.js
-// Banco Nexus - API REST con Express + MongoDB (usando db.js modular)
-// Integrante 2: Programador Backend
+// Banco Nexus - API REST con Express + MongoDB.
 
 const express = require('express');
 const cors = require('cors');
-const { conectar, getDB } = require('./db');
+const { connect, getDb } = require('./db');
 
 const app = express();
 const PORT = process.env.PORT || 3001;
@@ -12,23 +10,18 @@ const PORT = process.env.PORT || 3001;
 app.use(cors());
 app.use(express.json());
 
-// Middleware: verificar que la BD está lista
 app.use((req, res, next) => {
-  try { getDB(); next(); }
+  try { getDb(); next(); }
   catch { res.status(503).json({ error: 'Base de datos no disponible' }); }
 });
 
-// ─── RUTAS ───────────────────────────────────────────────────────────────────
-
-// GET /health
 app.get('/health', (req, res) => {
   res.json({ estado: 'OK', timestamp: new Date() });
 });
 
-// GET /api/clientes
 app.get('/api/clientes', async (req, res) => {
   try {
-    const db = getDB();
+    const db = getDb();
     const clientes = await db.collection('clientes').find({}).toArray();
     res.json(clientes);
   } catch (err) {
@@ -36,11 +29,9 @@ app.get('/api/clientes', async (req, res) => {
   }
 });
 
-// GET /api/cuenta/:cuenta
-// Devuelve datos del cliente, saldo y últimas 10 transacciones
 app.get('/api/cuenta/:cuenta', async (req, res) => {
   try {
-    const db = getDB();
+    const db = getDb();
     const { cuenta } = req.params;
 
     const cuentaDoc = await db.collection('cuentas').findOne({ cuenta });
@@ -75,11 +66,9 @@ app.get('/api/cuenta/:cuenta', async (req, res) => {
   }
 });
 
-// GET /api/historial/:cuenta
-// Todas las transacciones ordenadas por fecha (para gráfica de evolución)
 app.get('/api/historial/:cuenta', async (req, res) => {
   try {
-    const db = getDB();
+    const db = getDb();
     const { cuenta } = req.params;
 
     const cuentaDoc = await db.collection('cuentas').findOne({ cuenta });
@@ -98,11 +87,9 @@ app.get('/api/historial/:cuenta', async (req, res) => {
   }
 });
 
-// POST /api/deposito
-// Body: { cuenta, monto, descripcion? }
 app.post('/api/deposito', async (req, res) => {
   try {
-    const db = getDB();
+    const db = getDb();
     const { cuenta, monto, descripcion } = req.body;
 
     if (!cuenta || monto === undefined) return res.status(400).json({ error: 'Faltan campos: cuenta y monto son requeridos' });
@@ -133,11 +120,9 @@ app.post('/api/deposito', async (req, res) => {
   }
 });
 
-// POST /api/retiro
-// Body: { cuenta, monto, descripcion? }
 app.post('/api/retiro', async (req, res) => {
   try {
-    const db = getDB();
+    const db = getDb();
     const { cuenta, monto, descripcion } = req.body;
 
     if (!cuenta || monto === undefined) return res.status(400).json({ error: 'Faltan campos: cuenta y monto son requeridos' });
@@ -169,12 +154,10 @@ app.post('/api/retiro', async (req, res) => {
   }
 });
 
-// ─── INICIO ──────────────────────────────────────────────────────────────────
-
-conectar().then(() => {
+connect().then(() => {
   app.listen(PORT, () => {
-    console.log(`🚀 Servidor Banco Nexus en http://localhost:${PORT}`);
-    console.log('── RUTAS ──────────────────────────────────────');
+    console.log(`Servidor Banco Nexus en http://localhost:${PORT}`);
+    console.log('Rutas disponibles:');
     console.log('  GET  /health');
     console.log('  GET  /api/clientes');
     console.log('  GET  /api/cuenta/:cuenta');
@@ -183,6 +166,6 @@ conectar().then(() => {
     console.log('  POST /api/retiro');
   });
 }).catch(err => {
-  console.error('❌ No se pudo conectar a MongoDB:', err.message);
+  console.error('No se pudo conectar a MongoDB:', err.message);
   process.exit(1);
 });
