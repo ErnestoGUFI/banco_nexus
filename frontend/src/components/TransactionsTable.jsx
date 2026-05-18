@@ -3,7 +3,7 @@ import { formatCurrency, formatDate } from "../utils/formatters";
 export default function TransactionsTable({ transactions }) {
   return (
     <section className="card">
-      <div className="section-title">Últimas transacciones</div>
+      <div className="section-title">Transacciones de la cuenta</div>
       {transactions.length === 0 ? (
         <div className="empty-state">Sin movimientos registrados.</div>
       ) : (

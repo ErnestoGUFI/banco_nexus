@@ -53,7 +53,6 @@ function createApp() {
 
       const transacciones = await Transaction.find({ cuenta })
         .sort({ fecha: -1 })
-        .limit(10)
         .lean();
 
       res.json({

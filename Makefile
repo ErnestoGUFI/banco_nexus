@@ -9,6 +9,9 @@ backend-start:
 backend-test:
 	cd backend && npm test
 
+backend-concurrent-transactions:
+	cd backend && ACCOUNT=1000000002 RUNS=3 node scripts/simulateConcurrentBranches.js
+
 backend-dev:
 	cd backend && npm run dev
 
