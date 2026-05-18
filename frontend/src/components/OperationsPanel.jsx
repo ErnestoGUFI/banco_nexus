@@ -1,3 +1,5 @@
+import { BRANCHES } from "../constants/branches";
+
 function OperationCard({
   amount,
   buttonLabel,
@@ -35,10 +37,12 @@ function OperationCard({
 }
 
 export default function OperationsPanel({
+  branch,
   depositAmount,
   depositMessage,
   depositMessageType,
   loading,
+  onBranchChange,
   withdrawalAmount,
   withdrawalMessage,
   withdrawalMessageType,
@@ -49,6 +53,27 @@ export default function OperationsPanel({
 }) {
   return (
     <section className="operations-grid">
+      <article className="operation-card operation-card-branch">
+        <div className="section-title">Sucursal Remota</div>
+        <label className="card-label" htmlFor="branch-selector">
+          Operar desde
+        </label>
+        <select
+          id="branch-selector"
+          className="select-input"
+          value={branch}
+          onChange={(event) => onBranchChange(event.target.value)}
+        >
+          {BRANCHES.map((branchOption) => (
+            <option key={branchOption} value={branchOption}>
+              {branchOption}
+            </option>
+          ))}
+        </select>
+        <div className="card-subtitle">
+          El origen se registrará en cada depósito y retiro.
+        </div>
+      </article>
       <OperationCard
         amount={depositAmount}
         buttonLabel="+ Depositar"

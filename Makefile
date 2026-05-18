@@ -6,6 +6,9 @@ backend-install:
 backend-start:
 	cd backend && npm start
 
+backend-test:
+	cd backend && npm test
+
 backend-dev:
 	cd backend && npm run dev
 

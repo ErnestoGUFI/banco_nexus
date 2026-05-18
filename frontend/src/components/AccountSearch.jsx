@@ -1,8 +1,12 @@
+import RecentSearches from "./RecentSearches";
+
 export default function AccountSearch({
   accountInput,
   error,
   loading,
+  recentSearches,
   onAccountInputChange,
+  onRecentSearchSelect,
   onSearch,
 }) {
   return (
@@ -23,6 +27,10 @@ export default function AccountSearch({
           {loading ? "..." : "Consultar"}
         </button>
       </div>
+      <RecentSearches
+        items={recentSearches}
+        onSelect={onRecentSearchSelect}
+      />
       {error && <div className="message message-error">x {error}</div>}
     </section>
   );
