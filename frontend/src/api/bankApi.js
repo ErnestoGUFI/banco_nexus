@@ -25,11 +25,15 @@ export async function getAccountHistory(accountNumber) {
   return response.json();
 }
 
-export async function createTransaction(type, accountNumber, amount) {
+export async function createTransaction(type, accountNumber, amount, branch) {
   const response = await fetch(`${API_URL}/api/${type}`, {
     method: "POST",
     headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({ cuenta: accountNumber, monto: amount }),
+    body: JSON.stringify({
+      cuenta: accountNumber,
+      monto: amount,
+      sucursal: branch,
+    }),
   });
 
   return parseJsonResponse(response);

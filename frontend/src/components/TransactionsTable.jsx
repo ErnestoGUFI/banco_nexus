@@ -10,7 +10,9 @@ export default function TransactionsTable({ transactions }) {
         <>
           <div className="transactions-header">
             <span>Fecha</span>
+            <span>Tipo</span>
             <span>Descripción</span>
+            <span>Sucursal</span>
             <span>Monto</span>
             <span>Saldo resultante</span>
           </div>
@@ -21,8 +23,12 @@ export default function TransactionsTable({ transactions }) {
                 <span className={`transaction-badge transaction-badge-${transaction.tipo}`}>
                   {transaction.tipo}
                 </span>
-                {" "}
-                {transaction.descripcion}
+              </span>
+              <span className="transaction-description">{transaction.descripcion}</span>
+              <span>
+                <span className="transaction-badge transaction-badge-branch">
+                  {transaction.sucursal || "CDMX"}
+                </span>
               </span>
               <span className="transaction-amount">
                 {transaction.tipo === "deposito" ? "+" : "-"}

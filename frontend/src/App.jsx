@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 
 import { createTransaction, getAccount, getAccountHistory } from "./api/bankApi";
 import AccountSearch from "./components/AccountSearch";
@@ -7,8 +7,11 @@ import Header from "./components/Header";
 import OperationsPanel from "./components/OperationsPanel";
 import SummaryCards from "./components/SummaryCards";
 import TransactionsTable from "./components/TransactionsTable";
+import { DEFAULT_BRANCH } from "./constants/branches";
 import { formatHistory } from "./utils/formatters";
 import "./styles.css";
+
+const RECENT_SEARCHES_KEY = "banco-nexus-recent-searches";
 
 export default function App() {
   const [accountInput, setAccountInput] = useState("");
@@ -16,6 +19,8 @@ export default function App() {
   const [accountHistory, setAccountHistory] = useState([]);
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
+  const [recentSearches, setRecentSearches] = useState([]);
+  const [recentSearchesReady, setRecentSearchesReady] = useState(false);
 
   const [depositAmount, setDepositAmount] = useState("");
   const [withdrawalAmount, setWithdrawalAmount] = useState("");
@@ -24,16 +29,62 @@ export default function App() {
   const [depositMessageType, setDepositMessageType] = useState("success");
   const [withdrawalMessageType, setWithdrawalMessageType] = useState("success");
   const [operationLoading, setOperationLoading] = useState(false);
+  const [selectedBranch, setSelectedBranch] = useState(DEFAULT_BRANCH);
 
-  async function loadAccount(accountNumber, { clearOperationMessages = true } = {}) {
+  useEffect(() => {
+    try {
+      const savedSearches = window.localStorage.getItem(RECENT_SEARCHES_KEY);
+      if (savedSearches) {
+        setRecentSearches(JSON.parse(savedSearches));
+      }
+    } catch {
+      window.localStorage.removeItem(RECENT_SEARCHES_KEY);
+    } finally {
+      setRecentSearchesReady(true);
+    }
+  }, []);
+
+  useEffect(() => {
+    if (!recentSearchesReady) {
+      return;
+    }
+
+    window.localStorage.setItem(
+      RECENT_SEARCHES_KEY,
+      JSON.stringify(recentSearches),
+    );
+  }, [recentSearches, recentSearchesReady]);
+
+  function registerRecentSearch(account) {
+    setRecentSearches((currentSearches) => {
+      const nextSearches = [
+        {
+          cuenta: account.cuenta,
+          nombre: account.cliente.nombre,
+          tipo: account.tipo,
+        },
+        ...currentSearches.filter((item) => item.cuenta !== account.cuenta),
+      ].slice(0, 3);
+
+      return nextSearches;
+    });
+  }
+
+  async function loadAccount(
+    accountNumber,
+    { clearOperationMessages = true, preserveVisibleData = false } = {},
+  ) {
     if (!accountNumber) {
       return;
     }
 
     setLoading(true);
     setError("");
-    setAccountData(null);
-    setAccountHistory([]);
+
+    if (!preserveVisibleData) {
+      setAccountData(null);
+      setAccountHistory([]);
+    }
 
     if (clearOperationMessages) {
       setDepositMessage("");
@@ -48,6 +99,7 @@ export default function App() {
 
       setAccountData(account);
       setAccountHistory(formatHistory(history));
+      registerRecentSearch(account);
     } catch (searchError) {
       setError(searchError.message);
     } finally {
@@ -59,6 +111,16 @@ export default function App() {
     await loadAccount(accountInput.trim());
   }
 
+  async function selectRecentSearch(accountNumber) {
+    setAccountInput(accountNumber);
+    await loadAccount(accountNumber);
+  }
+
+  function clearOperationMessages() {
+    setDepositMessage("");
+    setWithdrawalMessage("");
+  }
+
   async function submitOperation(type) {
     const rawAmount = type === "deposito" ? depositAmount : withdrawalAmount;
     const amount = parseFloat(rawAmount);
@@ -67,11 +129,17 @@ export default function App() {
       return;
     }
 
+    clearOperationMessages();
     setOperationLoading(true);
 
     try {
-      const result = await createTransaction(type, accountData.cuenta, amount);
-      const message = `${type === "deposito" ? "Depósito" : "Retiro"} de $${amount.toLocaleString("es-MX")} realizado. Nuevo saldo: $${result.nuevoSaldo.toLocaleString("es-MX")}`;
+      const result = await createTransaction(
+        type,
+        accountData.cuenta,
+        amount,
+        selectedBranch,
+      );
+      const message = `${type === "deposito" ? "Depósito" : "Retiro"} desde ${result.sucursal} de $${amount.toLocaleString("es-MX")} realizado. Nuevo saldo: $${result.nuevoSaldo.toLocaleString("es-MX")}`;
 
       if (type === "deposito") {
         setDepositMessage(message);
@@ -83,7 +151,10 @@ export default function App() {
         setWithdrawalAmount("");
       }
 
-      await loadAccount(accountData.cuenta, { clearOperationMessages: false });
+      await loadAccount(accountData.cuenta, {
+        clearOperationMessages: false,
+        preserveVisibleData: true,
+      });
     } catch (operationError) {
       if (type === "deposito") {
         setDepositMessage(operationError.message);
@@ -106,7 +177,9 @@ export default function App() {
           accountInput={accountInput}
           error={error}
           loading={loading}
+          recentSearches={recentSearches}
           onAccountInputChange={setAccountInput}
+          onRecentSearchSelect={selectRecentSearch}
           onSearch={searchAccount}
         />
 
@@ -115,6 +188,7 @@ export default function App() {
             <SummaryCards account={accountData} />
             <BalanceChart history={accountHistory} />
             <OperationsPanel
+              branch={selectedBranch}
               depositAmount={depositAmount}
               depositMessage={depositMessage}
               depositMessageType={depositMessageType}
@@ -122,6 +196,7 @@ export default function App() {
               withdrawalAmount={withdrawalAmount}
               withdrawalMessage={withdrawalMessage}
               withdrawalMessageType={withdrawalMessageType}
+              onBranchChange={setSelectedBranch}
               onDepositAmountChange={setDepositAmount}
               onDepositSubmit={() => submitOperation("deposito")}
               onWithdrawalAmountChange={setWithdrawalAmount}

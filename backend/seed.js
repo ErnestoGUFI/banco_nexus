@@ -1,10 +1,8 @@
 // Banco Nexus - deterministic MongoDB seed script.
 
-const { MongoClient } = require("mongodb");
-const { Client, Account, Transaction } = require("./models");
-
-const uri = process.env.MONGO_URI || "mongodb://localhost:27017";
-const databaseName = process.env.DB_NAME || "banco_nexus";
+const { close, connect } = require("./src/db");
+const { Client, Account, Transaction } = require("./src/models");
+const { serializeTransaction } = require("./transactions");
 
 const clients = [
   new Client({
@@ -362,38 +360,30 @@ const transactions = [
   }),
 ];
 
-async function connectToDatabase() {
-  const client = new MongoClient(uri);
-  await client.connect();
-  return { client, db: client.db(databaseName) };
+async function clearCollections() {
+  await Client.deleteMany({});
+  await Account.deleteMany({});
+  await Transaction.deleteMany({});
 }
 
-async function clearCollections(db) {
-  await db.collection("clientes").deleteMany({});
-  await db.collection("cuentas").deleteMany({});
-  await db.collection("transacciones").deleteMany({});
-}
-
-async function insertSeedData(db) {
-  const insertedClients = await db.collection("clientes").insertMany(clients);
-  const insertedAccounts = await db.collection("cuentas").insertMany(accounts);
-  const insertedTransactions = await db
-    .collection("transacciones")
-    .insertMany(transactions);
+async function insertSeedData() {
+  const insertedClients = await Client.insertMany(clients);
+  const insertedAccounts = await Account.insertMany(accounts);
+  const insertedTransactions = await Transaction.insertMany(
+    transactions.map(serializeTransaction),
+  );
 
   return {
-    clients: insertedClients.insertedCount,
-    accounts: insertedAccounts.insertedCount,
-    transactions: insertedTransactions.insertedCount,
+    clients: insertedClients.length,
+    accounts: insertedAccounts.length,
+    transactions: insertedTransactions.length,
   };
 }
 
-async function createIndexes(db) {
-  await db.collection("clientes").createIndex({ curp: 1 }, { unique: true });
-  await db.collection("cuentas").createIndex({ cuenta: 1 }, { unique: true });
-  await db.collection("cuentas").createIndex({ cliente: 1 });
-  await db.collection("transacciones").createIndex({ cuenta: 1 });
-  await db.collection("transacciones").createIndex({ fecha: -1 });
+async function createIndexes() {
+  await Client.syncIndexes();
+  await Account.syncIndexes();
+  await Transaction.syncIndexes();
 }
 
 function printSummary(insertedCounts) {
@@ -411,17 +401,14 @@ function printSummary(insertedCounts) {
 }
 
 async function seedDatabase() {
-  let connection;
-
   try {
-    connection = await connectToDatabase();
-    console.log(`Connected to MongoDB: ${uri} -> ${databaseName}`);
+    await connect();
 
-    await clearCollections(connection.db);
+    await clearCollections();
     console.log("Collections cleared.");
 
-    const insertedCounts = await insertSeedData(connection.db);
-    await createIndexes(connection.db);
+    const insertedCounts = await insertSeedData();
+    await createIndexes();
     console.log("Indexes created.");
 
     printSummary(insertedCounts);
@@ -429,10 +416,8 @@ async function seedDatabase() {
     console.error("Seed failed:", error.message);
     process.exitCode = 1;
   } finally {
-    if (connection) {
-      await connection.client.close();
-      console.log("\nMongoDB connection closed.");
-    }
+    await close();
+    console.log("\nMongoDB connection closed.");
   }
 }
 

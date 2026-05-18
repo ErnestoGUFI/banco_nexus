@@ -7,7 +7,8 @@ body {
 }
 
 button,
-input {
+input,
+select {
   font: inherit;
 }
 
@@ -100,8 +101,60 @@ button:disabled {
   gap: 12px;
 }
 
+.recent-searches {
+  margin-top: 1rem;
+}
+
+.recent-searches-label {
+  margin-bottom: 0.7rem;
+}
+
+.recent-searches-list {
+  display: grid;
+  gap: 10px;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+}
+
+.recent-search-chip {
+  align-items: flex-start;
+  background: linear-gradient(180deg, rgba(16, 26, 47, 0.95), rgba(10, 15, 30, 0.95));
+  border: 1px solid #1e2d4a;
+  border-radius: 10px;
+  color: #e8eaf0;
+  cursor: pointer;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  min-width: 0;
+  padding: 0.8rem 0.95rem;
+  text-align: left;
+  transition: border-color 0.15s ease, transform 0.15s ease, box-shadow 0.15s ease;
+  width: 100%;
+}
+
+.recent-search-chip:hover {
+  border-color: #4fc3f7;
+  box-shadow: 0 0 0 1px rgba(79, 195, 247, 0.15);
+  transform: translateY(-1px);
+}
+
+.recent-search-chip-account {
+  color: #4fc3f7;
+  font-size: 0.95rem;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+}
+
+.recent-search-chip-meta {
+  color: #7e97b7;
+  font-size: 0.72rem;
+  line-height: 1.35;
+  text-transform: uppercase;
+}
+
 .text-input,
-.amount-input {
+.amount-input,
+.select-input {
   background: #0a0f1e;
   border: 1px solid #1e2d4a;
   border-radius: 6px;
@@ -117,6 +170,11 @@ button:disabled {
 
 .amount-input {
   font-size: 0.9rem;
+  margin-top: 8px;
+  width: 100%;
+}
+
+.select-input {
   margin-top: 8px;
   width: 100%;
 }
@@ -186,7 +244,7 @@ button:disabled {
 }
 
 .operations-grid {
-  grid-template-columns: 1fr 1fr;
+  grid-template-columns: repeat(3, 1fr);
 }
 
 .card-label {
@@ -243,7 +301,7 @@ button:disabled {
 .transaction-row {
   display: grid;
   gap: 12px;
-  grid-template-columns: 120px 1fr 130px 130px;
+  grid-template-columns: 120px 96px 1fr 110px 130px 130px;
 }
 
 .transactions-header {
@@ -289,6 +347,21 @@ button:disabled {
   color: #e57373;
 }
 
+.transaction-badge-branch {
+  background: #0e1a33;
+  color: #4fc3f7;
+}
+
+.transaction-description {
+  color: #e8eaf0;
+}
+
+.operation-card-branch {
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+}
+
 .transaction-amount {
   font-weight: 700;
 }
@@ -302,6 +375,10 @@ button:disabled {
 
   .summary-grid,
   .operations-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .recent-searches-list {
     grid-template-columns: 1fr;
   }
 
