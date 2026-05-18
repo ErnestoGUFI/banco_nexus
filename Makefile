@@ -1,5 +1,3 @@
-.PHONY: backend-install backend-start backend-dev db-install db-start db-stop db-seed frontend-install frontend-start frontend-build
-
 backend-install:
 	cd backend && npm install
 
