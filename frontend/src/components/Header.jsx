@@ -1,4 +1,32 @@
-export default function Header() {
+function getStatusCopy(health) {
+  if (!health) {
+    return "Verificando replica";
+  }
+
+  if (health.estado === "DOWN") {
+    return "Replica sin respuesta";
+  }
+
+  if (health.estado === "DEGRADED") {
+    return `Latencia ${health.latencyMs} ms`;
+  }
+
+  return health.primary ? `Primario ${health.primary}` : "Replica en linea";
+}
+
+function getStatusTone(health) {
+  if (health?.estado === "DOWN") {
+    return "error";
+  }
+
+  if (health?.estado === "DEGRADED") {
+    return "warning";
+  }
+
+  return "ok";
+}
+
+export default function Header({ health }) {
   return (
     <header className="app-header">
       <div>
@@ -6,8 +34,8 @@ export default function Header() {
         <div className="logo-subtitle">Sistema de Gestión Distribuida</div>
       </div>
       <div className="system-status">
-        <span className="status-dot" />
-        Sistema en línea
+        <span className={`status-dot status-dot-${getStatusTone(health)}`} />
+        {getStatusCopy(health)}
       </div>
     </header>
   );

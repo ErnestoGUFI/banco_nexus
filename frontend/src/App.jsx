@@ -1,6 +1,11 @@
 import { useEffect, useState } from "react";
 
-import { createTransaction, getAccount, getAccountHistory } from "./api/bankApi";
+import {
+  createTransaction,
+  getAccount,
+  getAccountHistory,
+  getSystemHealth,
+} from "./api/bankApi";
 import AccountSearch from "./components/AccountSearch";
 import BalanceChart from "./components/BalanceChart";
 import Header from "./components/Header";
@@ -12,12 +17,38 @@ import { formatHistory } from "./utils/formatters";
 import "./styles.css";
 
 const RECENT_SEARCHES_KEY = "banco-nexus-recent-searches";
+const HEALTH_POLL_MS = 10000;
+
+function getReplicaAlert(health) {
+  if (!health) {
+    return null;
+  }
+
+  if (health.estado === "DOWN") {
+    return {
+      type: "error",
+      title: "Replica Set sin respuesta",
+      message: health.error || "No se pudo confirmar el estado de MongoDB.",
+    };
+  }
+
+  if (health.estado === "DEGRADED") {
+    return {
+      type: "warning",
+      title: "Latencia elevada",
+      message: health.warning || `MongoDB respondio en ${health.latencyMs} ms.`,
+    };
+  }
+
+  return null;
+}
 
 export default function App() {
   const [accountInput, setAccountInput] = useState("");
   const [accountData, setAccountData] = useState(null);
   const [accountHistory, setAccountHistory] = useState([]);
   const [error, setError] = useState("");
+  const [systemHealth, setSystemHealth] = useState(null);
   const [loading, setLoading] = useState(false);
   const [recentSearches, setRecentSearches] = useState([]);
   const [recentSearchesReady, setRecentSearchesReady] = useState(false);
@@ -42,6 +73,34 @@ export default function App() {
     } finally {
       setRecentSearchesReady(true);
     }
+  }, []);
+
+  useEffect(() => {
+    let active = true;
+
+    async function checkHealth() {
+      try {
+        const health = await getSystemHealth();
+        if (active) {
+          setSystemHealth(health);
+        }
+      } catch (healthError) {
+        if (active) {
+          setSystemHealth({
+            estado: "DOWN",
+            error: healthError.message,
+          });
+        }
+      }
+    }
+
+    checkHealth();
+    const intervalId = window.setInterval(checkHealth, HEALTH_POLL_MS);
+
+    return () => {
+      active = false;
+      window.clearInterval(intervalId);
+    };
   }, []);
 
   useEffect(() => {
@@ -168,11 +227,20 @@ export default function App() {
     }
   }
 
+  const replicaAlert = getReplicaAlert(systemHealth);
+
   return (
     <div className="app-page">
-      <Header />
+      <Header health={systemHealth} />
 
       <main className="app-main">
+        {replicaAlert && (
+          <div className={`replica-alert replica-alert-${replicaAlert.type}`}>
+            <strong>{replicaAlert.title}</strong>
+            <span>{replicaAlert.message}</span>
+          </div>
+        )}
+
         <AccountSearch
           accountInput={accountInput}
           error={error}

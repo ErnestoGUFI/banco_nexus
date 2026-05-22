@@ -10,6 +10,11 @@ async function parseJsonResponse(response) {
   return data;
 }
 
+export async function getSystemHealth() {
+  const response = await fetch(`${API_URL}/health`);
+  return parseJsonResponse(response);
+}
+
 export async function getAccount(accountNumber) {
   const response = await fetch(`${API_URL}/api/cuenta/${accountNumber}`);
   return parseJsonResponse(response);

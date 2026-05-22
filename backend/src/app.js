@@ -1,7 +1,7 @@
 const express = require("express");
 const cors = require("cors");
 
-const { getDb } = require("./db");
+const { getDb, getReplicaSetHealth, isDbAvailabilityError } = require("./db");
 const { Account, Client, Transaction } = require("./models");
 const {
   TransactionError,
@@ -16,27 +16,36 @@ function createApp() {
 
   app.use(cors());
   app.use(express.json());
-  app.use((_, res, next) => {
+
+  app.get("/health", async (_, res) => {
+    const health = await getReplicaSetHealth();
+    const statusCode = health.estado === "DOWN" ? 503 : 200;
+
+    res.status(statusCode).json({
+      ...health,
+      timestamp: new Date(),
+    });
+  });
+
+  app.use("/api", (_, res, next) => {
     try {
       getDb();
       next();
     } catch {
-      res.status(503).json({ error: "Base de datos no disponible" });
+      res.status(503).json({
+        error: "Replica set de MongoDB no disponible",
+      });
     }
   });
 
   // Rutas de la API.
 
-  app.get("/health", (_, res) => {
-    res.json({ estado: "OK", timestamp: new Date() });
-  });
-
   app.get("/api/clientes", async (_, res) => {
     try {
       const clientes = await Client.find({}).lean();
       res.json(clientes);
-    } catch {
-      res.status(500).json({ error: "Error interno del servidor" });
+    } catch (error) {
+      handleDbError(error, res);
     }
   });
 
@@ -70,8 +79,7 @@ function createApp() {
         transacciones: transacciones.map(serializeTransaction),
       });
     } catch (error) {
-      console.error(error);
-      res.status(500).json({ error: "Error interno del servidor" });
+      handleDbError(error, res);
     }
   });
 
@@ -90,8 +98,7 @@ function createApp() {
 
       res.json(historial.map(serializeTransaction));
     } catch (error) {
-      console.error(error);
-      res.status(500).json({ error: "Error interno del servidor" });
+      handleDbError(error, res);
     }
   });
 
@@ -100,8 +107,8 @@ function createApp() {
       const result = await createBankOperation(
         { AccountModel: Account, TransactionModel: Transaction },
         {
-        ...req.body,
-        tipo: "deposito",
+          ...req.body,
+          tipo: "deposito",
         },
       );
 
@@ -122,8 +129,8 @@ function createApp() {
       const result = await createBankOperation(
         { AccountModel: Account, TransactionModel: Transaction },
         {
-        ...req.body,
-        tipo: "retiro",
+          ...req.body,
+          tipo: "retiro",
         },
       );
 
@@ -142,13 +149,24 @@ function createApp() {
   return app;
 }
 
+function handleDbError(error, res) {
+  if (isDbAvailabilityError(error)) {
+    console.error("MongoDB no disponible:", error.message);
+    return res.status(503).json({
+      error: "Replica set de MongoDB no disponible",
+    });
+  }
+
+  console.error(error);
+  return res.status(500).json({ error: "Error interno del servidor" });
+}
+
 function handleOperationError(error, res) {
   if (error instanceof TransactionError) {
     return res.status(error.statusCode).json({ error: error.message });
   }
 
-  console.error(error);
-  return res.status(500).json({ error: "Error interno del servidor" });
+  return handleDbError(error, res);
 }
 
 module.exports = { createApp };
