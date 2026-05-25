@@ -12,11 +12,11 @@ connect()
       console.log(`Servidor Banco Nexus en http://localhost:${PORT}`);
       console.log("Rutas disponibles:");
       console.log("  GET  /health");
-      console.log("  GET  /api/clientes");
-      console.log("  GET  /api/cuenta/:cuenta");
-      console.log("  GET  /api/historial/:cuenta");
-      console.log("  POST /api/deposito");
-      console.log("  POST /api/retiro");
+      console.log("  GET  /api/clients");
+      console.log("  GET  /api/accounts/:accountNumber");
+      console.log("  GET  /api/accounts/:accountNumber/history");
+      console.log("  POST /api/deposits");
+      console.log("  POST /api/withdrawals");
     });
   })
   .catch((error) => {

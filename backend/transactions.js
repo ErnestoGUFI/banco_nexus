@@ -31,23 +31,23 @@ function serializeTransaction(transaction) {
 
   return {
     ...baseTransaction,
-    sucursal: normalizeBranch(baseTransaction.sucursal),
+    branch: normalizeBranch(baseTransaction.branch),
   };
 }
 
-function validateOperationPayload({ cuenta, monto, tipo }) {
-  if (!cuenta || monto === undefined) {
+function validateOperationPayload({ accountNumber, amount, type }) {
+  if (!accountNumber || amount === undefined) {
     throw new TransactionError(
       400,
       "Faltan campos: cuenta y monto son requeridos",
     );
   }
 
-  if (typeof monto !== "number" || Number.isNaN(monto) || monto <= 0) {
+  if (typeof amount !== "number" || Number.isNaN(amount) || amount <= 0) {
     throw new TransactionError(400, "El monto debe ser un número positivo");
   }
 
-  if (!["deposito", "retiro"].includes(tipo)) {
+  if (!["deposit", "withdrawal"].includes(type)) {
     throw new TransactionError(400, "Tipo de operación no soportado");
   }
 }
@@ -56,31 +56,31 @@ function validateOperationPayload({ cuenta, monto, tipo }) {
 
 async function createBankOperation(
   { AccountModel = Account, TransactionModel = Transaction } = {},
-  { cuenta, monto, sucursal, tipo, descripcion },
+  { accountNumber, amount, branch, type, description },
 ) {
-  validateOperationPayload({ cuenta, monto, tipo });
+  validateOperationPayload({ accountNumber, amount, type });
 
-  const account = await AccountModel.findOne({ cuenta }).lean();
+  const account = await AccountModel.findOne({ accountNumber }).lean();
   if (!account) {
     throw new TransactionError(404, "Cuenta no encontrada");
   }
 
-  if (!account.activa) {
+  if (!account.active) {
     throw new TransactionError(403, "La cuenta está inactiva");
   }
 
-  if (tipo === "retiro" && account.saldo < monto) {
+  if (type === "withdrawal" && account.balance < amount) {
     throw new TransactionError(400, "Saldo insuficiente");
   }
 
-  const normalizedBranch = normalizeBranch(sucursal);
-  const roundedAmount = roundAmount(monto);
-  const balanceDelta = tipo === "deposito" ? roundedAmount : -roundedAmount;
-  const newBalance = roundAmount(account.saldo + balanceDelta);
+  const normalizedBranch = normalizeBranch(branch);
+  const roundedAmount = roundAmount(amount);
+  const balanceDelta = type === "deposit" ? roundedAmount : -roundedAmount;
+  const newBalance = roundAmount(account.balance + balanceDelta);
 
   const updateResult = await AccountModel.updateOne(
-    { cuenta },
-    { $set: { saldo: newBalance } },
+    { accountNumber },
+    { $set: { balance: newBalance } },
   );
 
   if (!updateResult.matchedCount) {
@@ -88,25 +88,25 @@ async function createBankOperation(
   }
 
   const transaction = serializeTransaction({
-    cuenta,
-    tipo,
-    monto: roundedAmount,
-    saldoResultante: newBalance,
-    fecha: new Date(),
-    sucursal: normalizedBranch,
-    descripcion:
-      descripcion || (tipo === "deposito" ? "Depósito" : "Retiro en cajero"),
+    accountNumber,
+    type,
+    amount: roundedAmount,
+    resultingBalance: newBalance,
+    date: new Date(),
+    branch: normalizedBranch,
+    description:
+      description || (type === "deposit" ? "Depósito" : "Retiro en cajero"),
   });
 
   const createdTransaction = await TransactionModel.create(transaction);
 
   return {
-    mensaje:
-      tipo === "deposito"
+    message:
+      type === "deposit"
         ? "Depósito realizado con éxito"
         : "Retiro realizado con éxito",
-    saldoAnterior: account.saldo,
-    nuevoSaldo: newBalance,
+    previousBalance: account.balance,
+    newBalance,
     transaction: serializeTransaction(createdTransaction.toObject()),
   };
 }

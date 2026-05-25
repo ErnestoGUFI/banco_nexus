@@ -94,7 +94,7 @@ function isDbAvailabilityError(error) {
 
 async function getReplicaSetHealth() {
   const baseHealth = {
-    estado: "DOWN",
+    status: "DOWN",
     dbName: DB_NAME,
     replicaSet: REPLICA_SET,
     readyState: DB_STATES[mongoose.connection.readyState] || "desconocido",
@@ -126,7 +126,7 @@ async function getReplicaSetHealth() {
 
     return {
       ...baseHealth,
-      estado: latencyMs > LATENCY_WARNING_MS ? "DEGRADED" : "OK",
+      status: latencyMs > LATENCY_WARNING_MS ? "DEGRADED" : "OK",
       readyState: DB_STATES[mongoose.connection.readyState] || "desconocido",
       primary: primaryMember?.name || hello.primary || null,
       me: hello.me || null,

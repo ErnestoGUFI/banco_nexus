@@ -1,0 +1,2 @@
+NAME                   IMAGE     COMMAND                  SERVICE    CREATED       STATUS       PORTS
+banco_nexus_mongo_rs   mongo:7   "docker-entrypoint.s…"   mongo-rs   9 hours ago   Up 9 hours   0.0.0.0:27017-27019->27017-27019/tcp, [::]:27017-27019->27017-27019/tcp

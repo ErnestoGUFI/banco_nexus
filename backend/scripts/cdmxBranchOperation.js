@@ -1,10 +1,10 @@
 const { executeBranchOperation } = require("./branchOperation");
 
 executeBranchOperation({
-  cuenta: process.env.ACCOUNT || "1000000001",
-  monto: Number.parseFloat(process.env.AMOUNT || "95"),
-  sucursal: "TIJ",
-  tipo: process.env.TYPE || "deposito",
+  accountNumber: process.env.ACCOUNT || "1000000001",
+  amount: Number.parseFloat(process.env.AMOUNT || "120"),
+  branch: "CDMX",
+  type: process.env.TYPE || "deposit",
 })
   .then((result) => {
     console.log(JSON.stringify(result, null, 2));

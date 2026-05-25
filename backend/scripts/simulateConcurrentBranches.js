@@ -1,7 +1,7 @@
 const { simulateConcurrentBranches } = require("./branchOperation");
 
 simulateConcurrentBranches({
-  cuenta: process.env.ACCOUNT || "1000000001",
+  accountNumber: process.env.ACCOUNT || "1000000001",
   runs: Number.parseInt(process.env.RUNS || "3", 10),
 })
   .then((reports) => {

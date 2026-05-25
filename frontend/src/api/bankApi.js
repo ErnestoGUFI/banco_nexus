@@ -16,12 +16,12 @@ export async function getSystemHealth() {
 }
 
 export async function getAccount(accountNumber) {
-  const response = await fetch(`${API_URL}/api/cuenta/${accountNumber}`);
+  const response = await fetch(`${API_URL}/api/accounts/${accountNumber}`);
   return parseJsonResponse(response);
 }
 
 export async function getAccountHistory(accountNumber) {
-  const response = await fetch(`${API_URL}/api/historial/${accountNumber}`);
+  const response = await fetch(`${API_URL}/api/accounts/${accountNumber}/history`);
 
   if (!response.ok) {
     return [];
@@ -31,13 +31,14 @@ export async function getAccountHistory(accountNumber) {
 }
 
 export async function createTransaction(type, accountNumber, amount, branch) {
-  const response = await fetch(`${API_URL}/api/${type}`, {
+  const operationPath = type === "deposit" ? "deposits" : "withdrawals";
+  const response = await fetch(`${API_URL}/api/${operationPath}`, {
     method: "POST",
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify({
-      cuenta: accountNumber,
-      monto: amount,
-      sucursal: branch,
+      accountNumber,
+      amount,
+      branch,
     }),
   });
 

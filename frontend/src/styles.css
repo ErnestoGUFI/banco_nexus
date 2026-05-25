@@ -363,11 +363,11 @@ button:disabled {
   padding: 0.7rem 0;
 }
 
-.transaction-deposito {
+.transaction-deposit {
   color: #81c784;
 }
 
-.transaction-retiro {
+.transaction-withdrawal {
   color: #e57373;
 }
 
@@ -381,12 +381,12 @@ button:disabled {
   padding: 2px 10px;
 }
 
-.transaction-badge-deposito {
+.transaction-badge-deposit {
   background: #0d2112;
   color: #81c784;
 }
 
-.transaction-badge-retiro {
+.transaction-badge-withdrawal {
   background: #1a0d0d;
   color: #e57373;
 }

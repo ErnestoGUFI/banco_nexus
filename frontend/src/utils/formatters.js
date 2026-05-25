@@ -8,8 +8,8 @@ export function formatDate(value) {
 
 export function formatHistory(transactions) {
   return transactions.map((transaction) => ({
-    fecha: formatDate(transaction.fecha),
-    saldo: transaction.saldoResultante,
+    date: formatDate(transaction.date),
+    balance: transaction.resultingBalance,
   }));
 }
 

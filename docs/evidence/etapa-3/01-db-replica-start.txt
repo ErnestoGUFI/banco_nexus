@@ -1,0 +1,3 @@
+mkdir -p .mongo-rs/node1 .mongo-rs/node2 .mongo-rs/node3 .mongo-rs/logs
+docker compose up -d mongo-rs
+ Container banco_nexus_mongo_rs Running 

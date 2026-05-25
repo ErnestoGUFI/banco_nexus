@@ -1,0 +1,20 @@
+services:
+  mongo-rs:
+    image: mongo:7
+    container_name: banco_nexus_mongo_rs
+    ports:
+      - "27017:27017"
+      - "27018:27018"
+      - "27019:27019"
+    volumes:
+      - ./.mongo-rs:/data/rs
+      - ./backend/scripts:/scripts:ro
+    command:
+      - /bin/sh
+      - -lc
+      - |
+        mkdir -p /data/rs/node1 /data/rs/node2 /data/rs/node3 /data/rs/logs
+        mongod --replSet rsBanco --port 27017 --dbpath /data/rs/node1 --bind_ip_all --fork --logpath /data/rs/logs/node1.log
+        mongod --replSet rsBanco --port 27018 --dbpath /data/rs/node2 --bind_ip_all --fork --logpath /data/rs/logs/node2.log
+        mongod --replSet rsBanco --port 27019 --dbpath /data/rs/node3 --bind_ip_all --fork --logpath /data/rs/logs/node3.log
+        tail -F /data/rs/logs/node1.log /data/rs/logs/node2.log /data/rs/logs/node3.log

@@ -5,18 +5,18 @@ export default function SummaryCards({ account }) {
     <section className="summary-grid">
       <article className="card">
         <div className="card-label">Saldo actual</div>
-        <div className="card-value">{formatCurrency(account.saldo)}</div>
-        <div className="card-subtitle">Tipo: {account.tipo}</div>
+        <div className="card-value">{formatCurrency(account.balance)}</div>
+        <div className="card-subtitle">Tipo: {account.accountType}</div>
       </article>
       <article className="card">
         <div className="card-label">Titular</div>
-        <div className="card-value card-value-small">{account.cliente.nombre}</div>
-        <div className="card-subtitle">{account.cliente.email}</div>
+        <div className="card-value card-value-small">{account.client.name}</div>
+        <div className="card-subtitle">{account.client.email}</div>
       </article>
       <article className="card">
         <div className="card-label">Apertura</div>
-        <div className="card-value card-value-small">{formatDate(account.fechaApertura)}</div>
-        <div className="card-subtitle">CURP: {account.cliente.curp}</div>
+        <div className="card-value card-value-small">{formatDate(account.openedAt)}</div>
+        <div className="card-subtitle">CURP: {account.client.curp}</div>
       </article>
     </section>
   );

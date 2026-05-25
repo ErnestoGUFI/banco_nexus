@@ -3,11 +3,11 @@ function getStatusCopy(health) {
     return "Verificando replica";
   }
 
-  if (health.estado === "DOWN") {
+  if (health.status === "DOWN") {
     return "Replica sin respuesta";
   }
 
-  if (health.estado === "DEGRADED") {
+  if (health.status === "DEGRADED") {
     return `Latencia ${health.latencyMs} ms`;
   }
 
@@ -15,11 +15,11 @@ function getStatusCopy(health) {
 }
 
 function getStatusTone(health) {
-  if (health?.estado === "DOWN") {
+  if (health?.status === "DOWN") {
     return "error";
   }
 
-  if (health?.estado === "DEGRADED") {
+  if (health?.status === "DEGRADED") {
     return "warning";
   }
 

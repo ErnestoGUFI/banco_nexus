@@ -19,7 +19,7 @@ function createApp() {
 
   app.get("/health", async (_, res) => {
     const health = await getReplicaSetHealth();
-    const statusCode = health.estado === "DOWN" ? 503 : 200;
+    const statusCode = health.status === "DOWN" ? 503 : 200;
 
     res.status(statusCode).json({
       ...health,
@@ -40,106 +40,106 @@ function createApp() {
 
   // Rutas de la API.
 
-  app.get("/api/clientes", async (_, res) => {
+  app.get("/api/clients", async (_, res) => {
     try {
-      const clientes = await Client.find({}).lean();
-      res.json(clientes);
+      const clients = await Client.find({}).lean();
+      res.json(clients);
     } catch (error) {
       handleDbError(error, res);
     }
   });
 
-  app.get("/api/cuenta/:cuenta", async (req, res) => {
+  app.get("/api/accounts/:accountNumber", async (req, res) => {
     try {
-      const { cuenta } = req.params;
+      const { accountNumber } = req.params;
 
-      const cuentaDoc = await Account.findOne({ cuenta }).lean();
-      if (!cuentaDoc) {
+      const account = await Account.findOne({ accountNumber }).lean();
+      if (!account) {
         return res.status(404).json({ error: "Cuenta no encontrada" });
       }
 
-      const clienteDoc = await Client.findOne({ curp: cuentaDoc.cliente }).lean();
+      const client = await Client.findOne({ curp: account.client }).lean();
 
-      const transacciones = await Transaction.find({ cuenta })
-        .sort({ fecha: -1 })
+      const transactions = await Transaction.find({ accountNumber })
+        .sort({ date: -1 })
         .lean();
 
       res.json({
-        cuenta: cuentaDoc.cuenta,
-        tipo: cuentaDoc.tipo,
-        saldo: cuentaDoc.saldo,
-        fechaApertura: cuentaDoc.fechaApertura,
-        activa: cuentaDoc.activa,
-        cliente: {
-          nombre: clienteDoc?.nombre || "Desconocido",
-          curp: clienteDoc?.curp,
-          email: clienteDoc?.email,
-          telefono: clienteDoc?.telefono,
+        accountNumber: account.accountNumber,
+        accountType: account.accountType,
+        balance: account.balance,
+        openedAt: account.openedAt,
+        active: account.active,
+        client: {
+          name: client?.name || "Desconocido",
+          curp: client?.curp,
+          email: client?.email,
+          phone: client?.phone,
         },
-        transacciones: transacciones.map(serializeTransaction),
+        transactions: transactions.map(serializeTransaction),
       });
     } catch (error) {
       handleDbError(error, res);
     }
   });
 
-  app.get("/api/historial/:cuenta", async (req, res) => {
+  app.get("/api/accounts/:accountNumber/history", async (req, res) => {
     try {
-      const { cuenta } = req.params;
+      const { accountNumber } = req.params;
 
-      const cuentaDoc = await Account.findOne({ cuenta }).lean();
-      if (!cuentaDoc) {
+      const account = await Account.findOne({ accountNumber }).lean();
+      if (!account) {
         return res.status(404).json({ error: "Cuenta no encontrada" });
       }
 
-      const historial = await Transaction.find({ cuenta })
-        .sort({ fecha: 1 })
+      const history = await Transaction.find({ accountNumber })
+        .sort({ date: 1 })
         .lean();
 
-      res.json(historial.map(serializeTransaction));
+      res.json(history.map(serializeTransaction));
     } catch (error) {
       handleDbError(error, res);
     }
   });
 
-  app.post("/api/deposito", async (req, res) => {
+  app.post("/api/deposits", async (req, res) => {
     try {
       const result = await createBankOperation(
         { AccountModel: Account, TransactionModel: Transaction },
         {
           ...req.body,
-          tipo: "deposito",
+          type: "deposit",
         },
       );
 
       res.json({
-        mensaje: result.mensaje,
-        saldoAnterior: result.saldoAnterior,
-        montoDepositado: result.transaction.monto,
-        nuevoSaldo: result.nuevoSaldo,
-        sucursal: result.transaction.sucursal,
+        message: result.message,
+        previousBalance: result.previousBalance,
+        depositedAmount: result.transaction.amount,
+        newBalance: result.newBalance,
+        branch: result.transaction.branch,
       });
     } catch (error) {
       handleOperationError(error, res);
     }
   });
 
-  app.post("/api/retiro", async (req, res) => {
+  app.post("/api/withdrawals", async (req, res) => {
     try {
       const result = await createBankOperation(
         { AccountModel: Account, TransactionModel: Transaction },
         {
           ...req.body,
-          tipo: "retiro",
+          type: "withdrawal",
         },
       );
 
       res.json({
-        mensaje: result.mensaje,
-        saldoAnterior: result.saldoAnterior,
-        montoRetirado: result.transaction.monto,
-        nuevoSaldo: result.nuevoSaldo,
-        sucursal: result.transaction.sucursal,
+        message: result.message,
+        previousBalance: result.previousBalance,
+        withdrawnAmount: result.transaction.amount,
+        newBalance: result.newBalance,
+        branch: result.transaction.branch,
       });
     } catch (error) {
       handleOperationError(error, res);

@@ -1,0 +1,21 @@
+cd backend && npm run replica:failover
+
+> banco-nexus-backend@1.0.0 replica:failover
+> node scripts/failoverTest.js
+
+Conectado al Replica Set rsBanco.
+
+Estado del Replica Set:
+localhost:27017 | Estado: SECONDARY | health: 1
+localhost:27018 | Estado: SECONDARY | health: 1
+localhost:27019 | Estado: PRIMARY | health: 1
+
+Nodo actual: localhost:27019
+Primario detectado: localhost:27019
+Puede escribir: true
+
+Transaccion insertada con mayoria: 6a13c38d66f0687f975bd7ce
+localhost:27017 | lectura secundaria OK | transactions: 21
+localhost:27018 | lectura secundaria OK | transactions: 21
+
+Prueba completada. Puedes apagar o degradar el primario y repetirla.

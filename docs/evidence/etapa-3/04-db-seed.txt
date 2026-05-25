@@ -1,0 +1,31 @@
+cd backend && node seed.js
+MongoDB conectado al replica set.
+MongoDB conectado con Mongoose: mongodb://localhost:27017,localhost:27018,localhost:27019/banco_nexus?replicaSet=rsBanco -> banco_nexus
+Collections cleared.
+Indexes created.
+
+Banco Nexus seed completed.
+Clientes insertados: 15
+Cuentas insertadas: 15
+Transacciones insertadas: 19
+
+Cuentas de prueba:
+  1000000001 | Ana Gabriela Ruiz Mendoza              | $18750.45
+  1000000002 | Luis Alberto Pérez Torres              | $32400.00
+  1000000003 | María Fernanda López García            | $12890.75
+  1000000004 | Carlos Eduardo Martínez Soto           | $45620.10
+  1000000005 | Sofía Alejandra Hernández Cruz         | $9850.50
+  1000000006 | Jorge Antonio Ramírez Vega             | $27610.25
+  1000000007 | Valentina Torres Jiménez               | $15120.00
+  1000000008 | Roberto Carlos Díaz Fuentes            | $38990.35
+  1000000009 | Paola Itzel Morales Castillo           | $22175.80
+  1000000010 | Alejandro Gutiérrez Navarro            | $50600.00
+  1000000011 | Isabella Vargas Reyes                  | $7340.20
+  1000000012 | Miguel Ángel Flores Ortega             | $19480.60
+  1000000013 | Daniela Ruiz Santana                   | $11325.90
+  1000000014 | Eduardo Salinas Bravo                  | $41780.45
+  1000000015 | Camila Estrada Medina                  | $16840.30
+MongoDB desconectado. Esperando reconexion del replica set.
+Conexion Mongoose cerrada.
+
+MongoDB connection closed.

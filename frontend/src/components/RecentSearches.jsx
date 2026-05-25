@@ -9,14 +9,14 @@ export default function RecentSearches({ items, onSelect }) {
       <div className="recent-searches-list">
         {items.map((item) => (
           <button
-            key={item.cuenta}
+            key={item.accountNumber}
             className="recent-search-chip"
             type="button"
-            onClick={() => onSelect(item.cuenta)}
+            onClick={() => onSelect(item.accountNumber)}
           >
-            <span className="recent-search-chip-account">{item.cuenta}</span>
+            <span className="recent-search-chip-account">{item.accountNumber}</span>
             <span className="recent-search-chip-meta">
-              {item.nombre} · {item.tipo}
+              {item.name} · {item.accountType}
             </span>
           </button>
         ))}

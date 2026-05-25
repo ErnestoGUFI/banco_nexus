@@ -24,7 +24,7 @@ function getReplicaAlert(health) {
     return null;
   }
 
-  if (health.estado === "DOWN") {
+  if (health.status === "DOWN") {
     return {
       type: "error",
       title: "Replica Set sin respuesta",
@@ -32,7 +32,7 @@ function getReplicaAlert(health) {
     };
   }
 
-  if (health.estado === "DEGRADED") {
+  if (health.status === "DEGRADED") {
     return {
       type: "warning",
       title: "Latencia elevada",
@@ -87,7 +87,7 @@ export default function App() {
       } catch (healthError) {
         if (active) {
           setSystemHealth({
-            estado: "DOWN",
+            status: "DOWN",
             error: healthError.message,
           });
         }
@@ -118,11 +118,11 @@ export default function App() {
     setRecentSearches((currentSearches) => {
       const nextSearches = [
         {
-          cuenta: account.cuenta,
-          nombre: account.cliente.nombre,
-          tipo: account.tipo,
+          accountNumber: account.accountNumber,
+          name: account.client.name,
+          accountType: account.accountType,
         },
-        ...currentSearches.filter((item) => item.cuenta !== account.cuenta),
+        ...currentSearches.filter((item) => item.accountNumber !== account.accountNumber),
       ].slice(0, 3);
 
       return nextSearches;
@@ -181,7 +181,7 @@ export default function App() {
   }
 
   async function submitOperation(type) {
-    const rawAmount = type === "deposito" ? depositAmount : withdrawalAmount;
+    const rawAmount = type === "deposit" ? depositAmount : withdrawalAmount;
     const amount = parseFloat(rawAmount);
 
     if (!accountData || !amount || amount <= 0) {
@@ -194,13 +194,13 @@ export default function App() {
     try {
       const result = await createTransaction(
         type,
-        accountData.cuenta,
+        accountData.accountNumber,
         amount,
         selectedBranch,
       );
-      const message = `${type === "deposito" ? "Depósito" : "Retiro"} desde ${result.sucursal} de $${amount.toLocaleString("es-MX")} realizado. Nuevo saldo: $${result.nuevoSaldo.toLocaleString("es-MX")}`;
+      const message = `${type === "deposit" ? "Depósito" : "Retiro"} desde ${result.branch} de $${amount.toLocaleString("es-MX")} realizado. Nuevo saldo: $${result.newBalance.toLocaleString("es-MX")}`;
 
-      if (type === "deposito") {
+      if (type === "deposit") {
         setDepositMessage(message);
         setDepositMessageType("success");
         setDepositAmount("");
@@ -210,12 +210,12 @@ export default function App() {
         setWithdrawalAmount("");
       }
 
-      await loadAccount(accountData.cuenta, {
+      await loadAccount(accountData.accountNumber, {
         clearOperationMessages: false,
         preserveVisibleData: true,
       });
     } catch (operationError) {
-      if (type === "deposito") {
+      if (type === "deposit") {
         setDepositMessage(operationError.message);
         setDepositMessageType("error");
       } else {
@@ -266,11 +266,11 @@ export default function App() {
               withdrawalMessageType={withdrawalMessageType}
               onBranchChange={setSelectedBranch}
               onDepositAmountChange={setDepositAmount}
-              onDepositSubmit={() => submitOperation("deposito")}
+              onDepositSubmit={() => submitOperation("deposit")}
               onWithdrawalAmountChange={setWithdrawalAmount}
-              onWithdrawalSubmit={() => submitOperation("retiro")}
+              onWithdrawalSubmit={() => submitOperation("withdrawal")}
             />
-            <TransactionsTable transactions={accountData.transacciones} />
+            <TransactionsTable transactions={accountData.transactions} />
           </>
         )}
       </main>

@@ -7,15 +7,16 @@
     "start": "node server.js",
     "init-db": "node seed.js",
     "dev": "nodemon server.js",
-    "replica:init": "mongosh --port 27017 scripts/IniciarReplica.js",
+    "replica:init": "mongosh --port 27017 scripts/initializeReplicaSet.js",
     "replica:failover": "node scripts/failoverTest.js",
+    "replica:stepdown": "node scripts/stepDownPrimary.js",
     "test": "node --test tests/*.test.js",
     "simulate-branches": "node scripts/simulateConcurrentBranches.js",
-    "simulate-cdmx": "node scripts/operacionSucursalCDMX.js",
-    "simulate-gdl": "node scripts/operacionSucursalGDL.js",
-    "simulate-mty": "node scripts/operacionSucursalMTY.js",
-    "simulate-pue": "node scripts/operacionSucursalPUE.js",
-    "simulate-tij": "node scripts/operacionSucursalTIJ.js"
+    "simulate-cdmx": "node scripts/cdmxBranchOperation.js",
+    "simulate-gdl": "node scripts/gdlBranchOperation.js",
+    "simulate-mty": "node scripts/mtyBranchOperation.js",
+    "simulate-pue": "node scripts/pueBranchOperation.js",
+    "simulate-tij": "node scripts/tijBranchOperation.js"
   },
   "dependencies": {
     "cors": "^2.8.5",

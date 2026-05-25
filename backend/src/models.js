@@ -2,50 +2,50 @@ const mongoose = require("mongoose");
 
 const clientSchema = new mongoose.Schema(
   {
-    nombre: { type: String, required: true, trim: true },
+    name: { type: String, required: true, trim: true },
     curp: { type: String, required: true, unique: true, trim: true },
-    telefono: { type: String, required: true, trim: true },
+    phone: { type: String, required: true, trim: true },
     email: { type: String, required: true, trim: true },
   },
   {
-    collection: "clientes",
+    collection: "clients",
     versionKey: false,
   },
 );
 
 const accountSchema = new mongoose.Schema(
   {
-    cuenta: { type: String, required: true, unique: true, trim: true },
-    cliente: { type: String, required: true, trim: true },
-    tipo: { type: String, required: true, trim: true },
-    saldo: { type: Number, required: true },
-    fechaApertura: { type: Date, required: true },
-    activa: { type: Boolean, default: true },
+    accountNumber: { type: String, required: true, unique: true, trim: true },
+    client: { type: String, required: true, trim: true },
+    accountType: { type: String, required: true, trim: true },
+    balance: { type: Number, required: true },
+    openedAt: { type: Date, required: true },
+    active: { type: Boolean, default: true },
   },
   {
-    collection: "cuentas",
+    collection: "accounts",
     versionKey: false,
   },
 );
 
 const transactionSchema = new mongoose.Schema(
   {
-    cuenta: { type: String, required: true, trim: true, index: true },
-    tipo: { type: String, required: true, trim: true },
-    monto: { type: Number, required: true },
-    saldoResultante: { type: Number, required: true },
-    fecha: { type: Date, required: true },
-    descripcion: { type: String, required: true, trim: true },
-    sucursal: { type: String, default: "CDMX", trim: true },
+    accountNumber: { type: String, required: true, trim: true, index: true },
+    type: { type: String, required: true, trim: true },
+    amount: { type: Number, required: true },
+    resultingBalance: { type: Number, required: true },
+    date: { type: Date, required: true },
+    description: { type: String, required: true, trim: true },
+    branch: { type: String, default: "CDMX", trim: true },
   },
   {
-    collection: "transacciones",
+    collection: "transactions",
     versionKey: false,
   },
 );
 
-accountSchema.index({ cliente: 1 });
-transactionSchema.index({ fecha: -1 });
+accountSchema.index({ client: 1 });
+transactionSchema.index({ date: -1 });
 
 const Client =
   mongoose.models.Client || mongoose.model("Client", clientSchema);

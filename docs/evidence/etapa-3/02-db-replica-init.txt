@@ -1,0 +1,148 @@
+docker compose exec -T mongo-rs mongosh --port 27017 /scripts/initializeReplicaSet.js
+Replica set rsBanco ya estaba inicializado.
+{
+  set: 'rsBanco',
+  date: ISODate('2026-05-25T03:33:54.844Z'),
+  myState: 2,
+  term: Long('50'),
+  syncSourceHost: 'localhost:27018',
+  syncSourceId: 1,
+  heartbeatIntervalMillis: Long('2000'),
+  majorityVoteCount: 2,
+  writeMajorityCount: 2,
+  votingMembersCount: 3,
+  writableVotingMembersCount: 3,
+  optimes: {
+    lastCommittedOpTime: {
+      ts: Timestamp({ t: 1779680028, i: 1 }),
+      t: Long('50')
+    },
+    lastCommittedWallTime: ISODate('2026-05-25T03:33:48.846Z'),
+    readConcernMajorityOpTime: {
+      ts: Timestamp({ t: 1779680028, i: 1 }),
+      t: Long('50')
+    },
+    appliedOpTime: {
+      ts: Timestamp({ t: 1779680028, i: 1 }),
+      t: Long('50')
+    },
+    durableOpTime: {
+      ts: Timestamp({ t: 1779680028, i: 1 }),
+      t: Long('50')
+    },
+    lastAppliedWallTime: ISODate('2026-05-25T03:33:48.846Z'),
+    lastDurableWallTime: ISODate('2026-05-25T03:33:48.846Z')
+  },
+  lastStableRecoveryTimestamp: Timestamp({ t: 1779680018, i: 1 }),
+  electionParticipantMetrics: {
+    votedForCandidate: true,
+    electionTerm: Long('50'),
+    lastVoteDate: ISODate('2026-05-25T03:29:08.652Z'),
+    electionCandidateMemberId: 1,
+    voteReason: '',
+    lastAppliedOpTimeAtElection: {
+      ts: Timestamp({ t: 1779679735, i: 1 }),
+      t: Long('49')
+    },
+    maxAppliedOpTimeInSet: {
+      ts: Timestamp({ t: 1779679735, i: 1 }),
+      t: Long('49')
+    },
+    priorityAtElection: 1,
+    newTermStartDate: ISODate('2026-05-25T03:29:08.667Z'),
+    newTermAppliedDate: ISODate('2026-05-25T03:29:08.679Z')
+  },
+  members: [
+    {
+      _id: 0,
+      name: 'localhost:27017',
+      health: 1,
+      state: 2,
+      stateStr: 'SECONDARY',
+      uptime: 32200,
+      optime: {
+        ts: Timestamp({ t: 1779680028, i: 1 }),
+        t: Long('50')
+      },
+      optimeDate: ISODate('2026-05-25T03:33:48.000Z'),
+      lastAppliedWallTime: ISODate('2026-05-25T03:33:48.846Z'),
+      lastDurableWallTime: ISODate('2026-05-25T03:33:48.846Z'),
+      syncSourceHost: 'localhost:27018',
+      syncSourceId: 1,
+      infoMessage: '',
+      configVersion: 1,
+      configTerm: 50,
+      self: true,
+      lastHeartbeatMessage: ''
+    },
+    {
+      _id: 1,
+      name: 'localhost:27018',
+      health: 1,
+      state: 1,
+      stateStr: 'PRIMARY',
+      uptime: 589,
+      optime: {
+        ts: Timestamp({ t: 1779680028, i: 1 }),
+        t: Long('50')
+      },
+      optimeDurable: {
+        ts: Timestamp({ t: 1779680028, i: 1 }),
+        t: Long('50')
+      },
+      optimeDate: ISODate('2026-05-25T03:33:48.000Z'),
+      optimeDurableDate: ISODate('2026-05-25T03:33:48.000Z'),
+      lastAppliedWallTime: ISODate('2026-05-25T03:33:48.846Z'),
+      lastDurableWallTime: ISODate('2026-05-25T03:33:48.846Z'),
+      lastHeartbeat: ISODate('2026-05-25T03:33:53.549Z'),
+      lastHeartbeatRecv: ISODate('2026-05-25T03:33:53.044Z'),
+      pingMs: Long('0'),
+      lastHeartbeatMessage: '',
+      syncSourceHost: '',
+      syncSourceId: -1,
+      infoMessage: '',
+      electionTime: Timestamp({ t: 1779679748, i: 1 }),
+      electionDate: ISODate('2026-05-25T03:29:08.000Z'),
+      configVersion: 1,
+      configTerm: 50
+    },
+    {
+      _id: 2,
+      name: 'localhost:27019',
+      health: 1,
+      state: 2,
+      stateStr: 'SECONDARY',
+      uptime: 589,
+      optime: {
+        ts: Timestamp({ t: 1779680028, i: 1 }),
+        t: Long('50')
+      },
+      optimeDurable: {
+        ts: Timestamp({ t: 1779680028, i: 1 }),
+        t: Long('50')
+      },
+      optimeDate: ISODate('2026-05-25T03:33:48.000Z'),
+      optimeDurableDate: ISODate('2026-05-25T03:33:48.000Z'),
+      lastAppliedWallTime: ISODate('2026-05-25T03:33:48.846Z'),
+      lastDurableWallTime: ISODate('2026-05-25T03:33:48.846Z'),
+      lastHeartbeat: ISODate('2026-05-25T03:33:53.043Z'),
+      lastHeartbeatRecv: ISODate('2026-05-25T03:33:53.549Z'),
+      pingMs: Long('0'),
+      lastHeartbeatMessage: '',
+      syncSourceHost: 'localhost:27018',
+      syncSourceId: 1,
+      infoMessage: '',
+      configVersion: 1,
+      configTerm: 50
+    }
+  ],
+  ok: 1,
+  '$clusterTime': {
+    clusterTime: Timestamp({ t: 1779680028, i: 1 }),
+    signature: {
+      hash: Binary.createFromBase64('AAAAAAAAAAAAAAAAAAAAAAAAAAA=', 0),
+      keyId: Long('0')
+    }
+  },
+  operationTime: Timestamp({ t: 1779680028, i: 1 })
+}

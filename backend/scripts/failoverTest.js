@@ -22,10 +22,10 @@ async function readFromSecondaries(members) {
       await secondaryClient.connect();
       const count = await secondaryClient
         .db(DB_NAME)
-        .collection("transacciones")
+        .collection("transactions")
         .countDocuments();
 
-      console.log(`${member.name} | lectura secundaria OK | transacciones: ${count}`);
+      console.log(`${member.name} | lectura secundaria OK | transactions: ${count}`);
     } catch (error) {
       console.warn(`${member.name} | lectura secundaria fallida: ${error.message}`);
     } finally {
@@ -59,21 +59,21 @@ async function testFailover() {
     console.log(`Primario detectado: ${primary?.name || hello.primary || "no disponible"}`);
     console.log(`Puede escribir: ${Boolean(hello.isWritablePrimary || hello.ismaster)}`);
 
-    const transacciones = client.db(DB_NAME).collection("transacciones");
-    const resultado = await transacciones.insertOne(
+    const transactions = client.db(DB_NAME).collection("transactions");
+    const result = await transactions.insertOne(
       {
-        cuenta: "1000000001",
-        tipo: "deposito",
-        monto: 1000,
-        saldoResultante: 1000,
-        fecha: new Date(),
-        descripcion: "Prueba automatizada de failover",
-        sucursal: "CDMX",
+        accountNumber: "1000000001",
+        type: "deposit",
+        amount: 1000,
+        resultingBalance: 1000,
+        date: new Date(),
+        description: "Prueba automatizada de failover",
+        branch: "CDMX",
       },
       { writeConcern: { w: "majority" } },
     );
 
-    console.log(`\nTransaccion insertada con mayoria: ${resultado.insertedId}`);
+    console.log(`\nTransaccion insertada con mayoria: ${result.insertedId}`);
     await readFromSecondaries(status.members);
 
     console.log("\nPrueba completada. Puedes apagar o degradar el primario y repetirla.");

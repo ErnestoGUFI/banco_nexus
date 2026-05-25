@@ -24,20 +24,22 @@ db-stop:
 
 db-replica-start:
 	mkdir -p .mongo-rs/node1 .mongo-rs/node2 .mongo-rs/node3 .mongo-rs/logs
-	mongod --replSet rsBanco --port 27017 --dbpath .mongo-rs/node1 --bind_ip localhost --fork --logpath .mongo-rs/logs/node1.log
-	mongod --replSet rsBanco --port 27018 --dbpath .mongo-rs/node2 --bind_ip localhost --fork --logpath .mongo-rs/logs/node2.log
-	mongod --replSet rsBanco --port 27019 --dbpath .mongo-rs/node3 --bind_ip localhost --fork --logpath .mongo-rs/logs/node3.log
+	docker compose up -d mongo-rs
 
 db-replica-init:
-	cd backend && npm run replica:init
+	docker compose exec -T mongo-rs mongosh --port 27017 /scripts/initializeReplicaSet.js
 
 db-replica-failover:
 	cd backend && npm run replica:failover
 
+db-replica-stepdown:
+	cd backend && npm run replica:stepdown
+
 db-replica-stop:
-	mongosh --port 27017 --eval 'db.adminCommand({ shutdown: 1 })' || true
-	mongosh --port 27018 --eval 'db.adminCommand({ shutdown: 1 })' || true
-	mongosh --port 27019 --eval 'db.adminCommand({ shutdown: 1 })' || true
+	docker compose down
+
+db-replica-logs:
+	docker compose logs -f mongo-rs
 
 db-seed:
 	cd backend && node seed.js

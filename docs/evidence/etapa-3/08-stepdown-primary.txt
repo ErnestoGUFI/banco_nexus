@@ -1,0 +1,7 @@
+cd backend && npm run replica:stepdown
+
+> banco-nexus-backend@1.0.0 replica:stepdown
+> node scripts/stepDownPrimary.js
+
+Degradando primario actual: localhost:27018
+Primario degradado por 60 segundos.

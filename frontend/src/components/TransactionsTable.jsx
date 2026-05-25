@@ -17,24 +17,24 @@ export default function TransactionsTable({ transactions }) {
             <span>Saldo resultante</span>
           </div>
           {transactions.map((transaction) => (
-            <div className={`transaction-row transaction-${transaction.tipo}`} key={transaction._id || `${transaction.cuenta}-${transaction.fecha}-${transaction.monto}`}>
-              <span>{formatDate(transaction.fecha)}</span>
+            <div className={`transaction-row transaction-${transaction.type}`} key={transaction._id || `${transaction.accountNumber}-${transaction.date}-${transaction.amount}`}>
+              <span>{formatDate(transaction.date)}</span>
               <span>
-                <span className={`transaction-badge transaction-badge-${transaction.tipo}`}>
-                  {transaction.tipo}
+                <span className={`transaction-badge transaction-badge-${transaction.type}`}>
+                  {transaction.type}
                 </span>
               </span>
-              <span className="transaction-description">{transaction.descripcion}</span>
+              <span className="transaction-description">{transaction.description}</span>
               <span>
                 <span className="transaction-badge transaction-badge-branch">
-                  {transaction.sucursal || "CDMX"}
+                  {transaction.branch || "CDMX"}
                 </span>
               </span>
               <span className="transaction-amount">
-                {transaction.tipo === "deposito" ? "+" : "-"}
-                {formatCurrency(transaction.monto)}
+                {transaction.type === "deposit" ? "+" : "-"}
+                {formatCurrency(transaction.amount)}
               </span>
-              <span>{formatCurrency(transaction.saldoResultante)}</span>
+              <span>{formatCurrency(transaction.resultingBalance)}</span>
             </div>
           ))}
         </>

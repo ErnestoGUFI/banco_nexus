@@ -14,16 +14,16 @@ function createMockDb({ account, updateResult } = {}) {
   const accountDocument = account
     ? { ...account }
     : {
-        cuenta: "1000000001",
-        saldo: 1000,
-        activa: true,
+        accountNumber: "1000000001",
+        balance: 1000,
+        active: true,
       };
 
   const AccountModel = {
     findOne(query) {
       return {
         async lean() {
-          if (query.cuenta === accountDocument.cuenta) {
+          if (query.accountNumber === accountDocument.accountNumber) {
             return { ...accountDocument };
           }
 
@@ -32,11 +32,11 @@ function createMockDb({ account, updateResult } = {}) {
       };
     },
     async updateOne(query, update) {
-      if (query.cuenta !== accountDocument.cuenta) {
+      if (query.accountNumber !== accountDocument.accountNumber) {
         return { matchedCount: 0 };
       }
 
-      accountDocument.saldo = update.$set.saldo;
+      accountDocument.balance = update.$set.balance;
       return updateResult || { matchedCount: 1, modifiedCount: 1 };
     },
   };
@@ -70,20 +70,20 @@ test("normalizeBranch returns default branch for unknown values", () => {
   assert.equal(normalizeBranch(undefined), DEFAULT_BRANCH);
 });
 
-test("serializeTransaction injects default branch when legacy data has no sucursal", () => {
+test("serializeTransaction injects default branch when legacy data has no branch", () => {
   const serialized = serializeTransaction({
-    cuenta: "1000000001",
-    tipo: "deposito",
-    monto: 500,
-    saldoResultante: 1500,
-    fecha: new Date("2026-05-17T10:00:00.000Z"),
-    descripcion: "Deposito de prueba",
+    accountNumber: "1000000001",
+    type: "deposit",
+    amount: 500,
+    resultingBalance: 1500,
+    date: new Date("2026-05-17T10:00:00.000Z"),
+    description: "Deposito de prueba",
   });
 
-  assert.equal(serialized.sucursal, DEFAULT_BRANCH);
+  assert.equal(serialized.branch, DEFAULT_BRANCH);
 });
 
-test("createBankOperation registers a deposito with branch metadata", async () => {
+test("createBankOperation registers a deposit with branch metadata", async () => {
   const db = createMockDb();
   const result = await createBankOperation(
     {
@@ -91,28 +91,28 @@ test("createBankOperation registers a deposito with branch metadata", async () =
       TransactionModel: db.TransactionModel,
     },
     {
-      cuenta: "1000000001",
-      monto: 250.55,
-      sucursal: "gdl",
-      tipo: "deposito",
-      descripcion: "Sucursal remota",
+      accountNumber: "1000000001",
+      amount: 250.55,
+      branch: "gdl",
+      type: "deposit",
+      description: "Sucursal remota",
     },
   );
 
-  assert.equal(result.nuevoSaldo, 1250.55);
-  assert.equal(result.saldoAnterior, 1000);
-  assert.equal(result.transaction.sucursal, "GDL");
-  assert.equal(result.transaction.descripcion, "Sucursal remota");
+  assert.equal(result.newBalance, 1250.55);
+  assert.equal(result.previousBalance, 1000);
+  assert.equal(result.transaction.branch, "GDL");
+  assert.equal(result.transaction.description, "Sucursal remota");
   assert.equal(db.createdTransactions.length, 1);
-  assert.equal(db.createdTransactions[0].saldoResultante, 1250.55);
+  assert.equal(db.createdTransactions[0].resultingBalance, 1250.55);
 });
 
 test("createBankOperation rejects withdrawals with insufficient funds", async () => {
   const db = createMockDb({
     account: {
-      cuenta: "1000000001",
-      saldo: 200,
-      activa: true,
+      accountNumber: "1000000001",
+      balance: 200,
+      active: true,
     },
   });
 
@@ -123,10 +123,10 @@ test("createBankOperation rejects withdrawals with insufficient funds", async ()
         TransactionModel: db.TransactionModel,
       },
       {
-        cuenta: "1000000001",
-        monto: 350,
-        sucursal: "MTY",
-        tipo: "retiro",
+        accountNumber: "1000000001",
+        amount: 350,
+        branch: "MTY",
+        type: "withdrawal",
       },
     ),
     (error) => {
@@ -137,7 +137,7 @@ test("createBankOperation rejects withdrawals with insufficient funds", async ()
   );
 
   assert.equal(db.createdTransactions.length, 0);
-  assert.equal(db.getAccountDocument().saldo, 200);
+  assert.equal(db.getAccountDocument().balance, 200);
 });
 
 test("createBankOperation validates required fields and inactive accounts", async () => {
@@ -149,9 +149,9 @@ test("createBankOperation validates required fields and inactive accounts", asyn
         TransactionModel: missingDb.TransactionModel,
       },
       {
-        cuenta: "",
-        monto: 100,
-        tipo: "deposito",
+        accountNumber: "",
+        amount: 100,
+        type: "deposit",
       },
     ),
     (error) => {
@@ -163,9 +163,9 @@ test("createBankOperation validates required fields and inactive accounts", asyn
 
   const inactiveDb = createMockDb({
     account: {
-      cuenta: "1000000001",
-      saldo: 1000,
-      activa: false,
+      accountNumber: "1000000001",
+      balance: 1000,
+      active: false,
     },
   });
 
@@ -176,9 +176,9 @@ test("createBankOperation validates required fields and inactive accounts", asyn
         TransactionModel: inactiveDb.TransactionModel,
       },
       {
-        cuenta: "1000000001",
-        monto: 100,
-        tipo: "deposito",
+        accountNumber: "1000000001",
+        amount: 100,
+        type: "deposit",
       },
     ),
     (error) => {
