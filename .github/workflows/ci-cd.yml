@@ -106,7 +106,7 @@ jobs:
             "GHCR_TOKEN='$GHCR_TOKEN' GHCR_USER='$GHCR_USER' BACKEND_IMAGE_TAG='$BACKEND_IMAGE_TAG' FRONTEND_IMAGE_TAG='$FRONTEND_IMAGE_TAG' bash -s" <<'REMOTE'
           set -euo pipefail
           echo "$GHCR_TOKEN" | docker login ghcr.io -u "$GHCR_USER" --password-stdin
-          docker service update --with-registry-auth --image "$BACKEND_IMAGE_TAG" banco_nexus_backend
+          docker service update --with-registry-auth --update-order stop-first --image "$BACKEND_IMAGE_TAG" banco_nexus_backend
           docker service update --with-registry-auth --image "$FRONTEND_IMAGE_TAG" banco_nexus_frontend
           docker service ps banco_nexus_backend --no-trunc
           docker service ps banco_nexus_frontend --no-trunc
