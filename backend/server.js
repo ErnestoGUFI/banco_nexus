@@ -1,5 +1,7 @@
 // Banco Nexus - API REST con Express + Mongoose.
 
+require("dotenv").config();
+
 const { connect } = require("./src/db");
 const { createApp } = require("./src/app");
 
@@ -12,11 +14,13 @@ connect()
       console.log(`Servidor Banco Nexus en http://localhost:${PORT}`);
       console.log("Rutas disponibles:");
       console.log("  GET  /health");
-      console.log("  GET  /api/clients");
-      console.log("  GET  /api/accounts/:accountNumber");
-      console.log("  GET  /api/accounts/:accountNumber/history");
-      console.log("  POST /api/deposits");
-      console.log("  POST /api/withdrawals");
+      console.log("  POST /api/auth/register");
+      console.log("  POST /api/auth/login");
+      console.log("  GET  /api/dashboard");
+      console.log("  PATCH /api/me");
+      console.log("  POST /api/beneficiaries");
+      console.log("  POST /api/transfers");
+      console.log("  GET  /api/audit");
     });
   })
   .catch((error) => {

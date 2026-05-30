@@ -33,11 +33,11 @@ export default function BalanceChart({ history }) {
       <div className="section-title">Evolución del saldo</div>
       <ResponsiveContainer width="100%" height={200}>
         <LineChart data={history} margin={{ top: 5, right: 10, left: 10, bottom: 5 }}>
-          <CartesianGrid strokeDasharray="3 3" stroke="#1e2d4a" />
-          <XAxis dataKey="date" tick={{ fill: "#546e8a", fontSize: 11 }} />
-          <YAxis tick={{ fill: "#546e8a", fontSize: 11 }} tickFormatter={(value) => `$${(value / 1000).toFixed(0)}k`} />
+          <CartesianGrid strokeDasharray="3 3" stroke="#202a67" />
+          <XAxis dataKey="date" tick={{ fill: "#b2b5ca", fontSize: 11 }} />
+          <YAxis tick={{ fill: "#b2b5ca", fontSize: 11 }} tickFormatter={(value) => `$${(value / 1000).toFixed(0)}k`} />
           <Tooltip content={<BalanceTooltip />} />
-          <Line type="monotone" dataKey="balance" stroke="#4fc3f7" strokeWidth={2} dot={{ fill: "#4fc3f7", r: 3 }} />
+          <Line type="monotone" dataKey="balance" stroke="#6d75ff" strokeWidth={3} dot={{ fill: "#0d17e7", stroke: "#d8dcff", strokeWidth: 2, r: 4 }} />
         </LineChart>
       </ResponsiveContainer>
     </section>

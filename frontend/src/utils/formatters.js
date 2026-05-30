@@ -6,11 +6,21 @@ export function formatDate(value) {
   return new Date(value).toLocaleDateString("es-MX");
 }
 
+export function formatDateTime(value) {
+  return new Date(value).toLocaleString("es-MX", {
+    dateStyle: "medium",
+    timeStyle: "short",
+  });
+}
+
 export function formatHistory(transactions) {
-  return transactions.map((transaction) => ({
-    date: formatDate(transaction.date),
-    balance: transaction.resultingBalance,
-  }));
+  return transactions
+    .slice()
+    .reverse()
+    .map((transaction) => ({
+      date: formatDate(transaction.date),
+      balance: transaction.resultingBalance,
+    }));
 }
 
 export function formatPlainAmount(value) {

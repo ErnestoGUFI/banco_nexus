@@ -2,19 +2,34 @@ const express = require("express");
 const cors = require("cors");
 
 const { getDb, getReplicaSetHealth, isDbAvailabilityError } = require("./db");
-const { Account, Client, Transaction } = require("./models");
+const { Account, AuditLog, Beneficiary, Client, Transaction } = require("./models");
 const {
-  TransactionError,
-  createBankOperation,
+  BankingError,
+  createBeneficiary,
+  executeTransfer,
+  getClientByToken,
+  getDashboard,
+  loginClient,
+  registerClient,
+  serializeBeneficiary,
   serializeTransaction,
-} = require("../transactions");
+  updateProfile,
+  validateAccountNumber,
+} = require("./banking");
 
 function createApp() {
   const app = express();
+  const corsOrigins = (process.env.CORS_ORIGIN || "")
+    .split(",")
+    .map((origin) => origin.trim())
+    .filter(Boolean);
 
-  // Middlewares de configuración.
-
-  app.use(cors());
+  app.use(
+    cors({
+      origin: corsOrigins.length ? corsOrigins : true,
+      credentials: true,
+    }),
+  );
   app.use(express.json());
 
   app.get("/health", async (_, res) => {
@@ -33,33 +48,121 @@ function createApp() {
       next();
     } catch {
       res.status(503).json({
-        error: "Replica set de MongoDB no disponible",
+        error: "La base de datos administrada no esta disponible",
       });
     }
   });
 
-  // Rutas de la API.
-
-  app.get("/api/clients", async (_, res) => {
+  app.post("/api/auth/register", async (req, res) => {
     try {
-      const clients = await Client.find({}).lean();
-      res.json(clients);
+      const result = await registerClient(req.body, { req });
+      res.status(201).json(result);
     } catch (error) {
-      handleDbError(error, res);
+      handleError(error, res);
+    }
+  });
+
+  app.post("/api/auth/login", async (req, res) => {
+    try {
+      const result = await loginClient(req.body, { req });
+      res.json(result);
+    } catch (error) {
+      handleError(error, res);
+    }
+  });
+
+  app.use("/api", authenticate);
+
+  app.get("/api/me", async (req, res) => {
+    res.json({ user: publicUser(req.user) });
+  });
+
+  app.patch("/api/me", async (req, res) => {
+    try {
+      const user = await updateProfile(req.user, req.body, { req });
+      res.json({ user });
+    } catch (error) {
+      handleError(error, res);
+    }
+  });
+
+  app.get("/api/dashboard", async (req, res) => {
+    try {
+      const dashboard = await getDashboard(req.user);
+      res.json(dashboard);
+    } catch (error) {
+      handleError(error, res);
+    }
+  });
+
+  app.get("/api/beneficiaries", async (req, res) => {
+    try {
+      const beneficiaries = await Beneficiary.find({ owner: req.user._id })
+        .sort({ createdAt: -1 })
+        .lean();
+
+      res.json(beneficiaries.map(serializeBeneficiary));
+    } catch (error) {
+      handleError(error, res);
+    }
+  });
+
+  app.post("/api/beneficiaries", async (req, res) => {
+    try {
+      const beneficiary = await createBeneficiary(req.user, req.body, { req });
+      res.status(201).json(beneficiary);
+    } catch (error) {
+      handleError(error, res);
+    }
+  });
+
+  app.post("/api/transfers", async (req, res) => {
+    try {
+      const result = await executeTransfer(req.user, req.body, { req });
+      res.status(201).json(result);
+    } catch (error) {
+      handleError(error, res);
+    }
+  });
+
+  app.get("/api/transactions", async (req, res) => {
+    try {
+      const transactions = await Transaction.find({
+        accountNumber: req.user.accountNumber,
+      })
+        .sort({ date: -1 })
+        .limit(100)
+        .lean();
+
+      res.json(transactions.map(serializeTransaction));
+    } catch (error) {
+      handleError(error, res);
+    }
+  });
+
+  app.get("/api/audit", async (req, res) => {
+    try {
+      const auditLogs = await AuditLog.find({ user: req.user._id })
+        .sort({ createdAt: -1 })
+        .limit(50)
+        .lean();
+
+      res.json(auditLogs);
+    } catch (error) {
+      handleError(error, res);
     }
   });
 
   app.get("/api/accounts/:accountNumber", async (req, res) => {
     try {
-      const { accountNumber } = req.params;
-
+      const accountNumber = validateAccountNumber(req.params.accountNumber);
       const account = await Account.findOne({ accountNumber }).lean();
+
       if (!account) {
         return res.status(404).json({ error: "Cuenta no encontrada" });
       }
 
-      const client = await Client.findOne({ curp: account.client }).lean();
-
+      const client = await Client.findById(account.owner).lean();
       const transactions = await Transaction.find({ accountNumber })
         .sort({ date: -1 })
         .lean();
@@ -72,101 +175,56 @@ function createApp() {
         active: account.active,
         client: {
           name: client?.name || "Desconocido",
-          curp: client?.curp,
           email: client?.email,
           phone: client?.phone,
         },
         transactions: transactions.map(serializeTransaction),
       });
     } catch (error) {
-      handleDbError(error, res);
+      handleError(error, res);
     }
   });
 
-  app.get("/api/accounts/:accountNumber/history", async (req, res) => {
+  async function authenticate(req, res, next) {
     try {
-      const { accountNumber } = req.params;
-
-      const account = await Account.findOne({ accountNumber }).lean();
-      if (!account) {
-        return res.status(404).json({ error: "Cuenta no encontrada" });
-      }
-
-      const history = await Transaction.find({ accountNumber })
-        .sort({ date: 1 })
-        .lean();
-
-      res.json(history.map(serializeTransaction));
+      req.user = await getClientByToken(req.headers.authorization);
+      next();
     } catch (error) {
-      handleDbError(error, res);
+      handleError(error, res);
     }
-  });
-
-  app.post("/api/deposits", async (req, res) => {
-    try {
-      const result = await createBankOperation(
-        { AccountModel: Account, TransactionModel: Transaction },
-        {
-          ...req.body,
-          type: "deposit",
-        },
-      );
-
-      res.json({
-        message: result.message,
-        previousBalance: result.previousBalance,
-        depositedAmount: result.transaction.amount,
-        newBalance: result.newBalance,
-        branch: result.transaction.branch,
-      });
-    } catch (error) {
-      handleOperationError(error, res);
-    }
-  });
-
-  app.post("/api/withdrawals", async (req, res) => {
-    try {
-      const result = await createBankOperation(
-        { AccountModel: Account, TransactionModel: Transaction },
-        {
-          ...req.body,
-          type: "withdrawal",
-        },
-      );
-
-      res.json({
-        message: result.message,
-        previousBalance: result.previousBalance,
-        withdrawnAmount: result.transaction.amount,
-        newBalance: result.newBalance,
-        branch: result.transaction.branch,
-      });
-    } catch (error) {
-      handleOperationError(error, res);
-    }
-  });
+  }
 
   return app;
 }
 
-function handleDbError(error, res) {
+function publicUser(client) {
+  return {
+    id: String(client._id),
+    name: client.name,
+    email: client.email,
+    phone: client.phone,
+    accountNumber: client.accountNumber,
+    accountSequence: client.accountSequence,
+  };
+}
+
+function handleError(error, res) {
+  if (error instanceof BankingError) {
+    return res.status(error.statusCode).json({
+      error: error.message,
+      code: error.code,
+    });
+  }
+
   if (isDbAvailabilityError(error)) {
-    console.error("MongoDB no disponible:", error.message);
+    console.error("Base de datos no disponible:", error.message);
     return res.status(503).json({
-      error: "Replica set de MongoDB no disponible",
+      error: "La base de datos administrada no esta disponible",
     });
   }
 
   console.error(error);
   return res.status(500).json({ error: "Error interno del servidor" });
-}
-
-function handleOperationError(error, res) {
-  if (error instanceof TransactionError) {
-    return res.status(error.statusCode).json({ error: error.message });
-  }
-
-  return handleDbError(error, res);
 }
 
 module.exports = { createApp };

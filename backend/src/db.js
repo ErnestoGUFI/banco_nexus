@@ -1,9 +1,24 @@
 const mongoose = require("mongoose");
+const fs = require("fs");
 
-const DB_NAME = process.env.DB_NAME || "banco_nexus";
-const REPLICA_SET = process.env.MONGO_REPLICA_SET || "rsBanco";
+function envOrFile(name, fallback) {
+  if (process.env[name]) {
+    return process.env[name];
+  }
+
+  const filePath = process.env[`${name}_FILE`];
+
+  if (filePath && fs.existsSync(filePath)) {
+    return fs.readFileSync(filePath, "utf8").trim();
+  }
+
+  return fallback;
+}
+
+const DB_NAME = envOrFile("DB_NAME", "banco_nexus");
+const REPLICA_SET = envOrFile("MONGO_REPLICA_SET", "rsBanco");
 const URI =
-  process.env.MONGO_URI ||
+  envOrFile("MONGO_URI") ||
   `mongodb://localhost:27017,localhost:27018,localhost:27019/${DB_NAME}?replicaSet=${REPLICA_SET}`;
 const LATENCY_WARNING_MS = Number(process.env.DB_LATENCY_WARNING_MS || 1000);
 
@@ -103,6 +118,7 @@ async function getReplicaSetHealth() {
     isWritablePrimary: false,
     latencyMs: null,
     members: [],
+    managedCluster: Boolean(process.env.MONGO_URI),
   };
 
   if (mongoose.connection.readyState !== 1) {
@@ -119,8 +135,15 @@ async function getReplicaSetHealth() {
     await admin.command({ ping: 1 });
     const latencyMs = Date.now() - startedAt;
     const hello = await admin.command({ hello: 1 });
-    const status = await admin.command({ replSetGetStatus: 1 });
-    const primaryMember = status.members.find(
+    let status = null;
+
+    try {
+      status = await admin.command({ replSetGetStatus: 1 });
+    } catch (statusError) {
+      status = null;
+    }
+
+    const primaryMember = status?.members?.find(
       (member) => member.stateStr === "PRIMARY",
     );
 
@@ -132,14 +155,15 @@ async function getReplicaSetHealth() {
       me: hello.me || null,
       isWritablePrimary: Boolean(hello.isWritablePrimary || hello.ismaster),
       latencyMs,
-      members: status.members.map((member) => ({
-        name: member.name,
-        stateStr: member.stateStr,
-        health: member.health,
-        uptime: member.uptime,
-        optimeDate: member.optimeDate,
-        lastHeartbeatMessage: member.lastHeartbeatMessage,
-      })),
+      members:
+        status?.members?.map((member) => ({
+          name: member.name,
+          stateStr: member.stateStr,
+          health: member.health,
+          uptime: member.uptime,
+          optimeDate: member.optimeDate,
+          lastHeartbeatMessage: member.lastHeartbeatMessage,
+        })) || [],
       warning:
         latencyMs > LATENCY_WARNING_MS
           ? `Latencia alta en MongoDB (${latencyMs} ms).`

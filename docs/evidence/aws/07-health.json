@@ -1,0 +1,39 @@
+{
+  "status": "OK",
+  "dbName": "banco_nexus",
+  "replicaSet": "rsBanco",
+  "readyState": "conectado",
+  "primary": "ac-gshvivj-shard-00-02.qhauqnl.mongodb.net:27017",
+  "me": "ac-gshvivj-shard-00-02.qhauqnl.mongodb.net:27017",
+  "isWritablePrimary": true,
+  "latencyMs": 1,
+  "members": [
+    {
+      "name": "ac-gshvivj-shard-00-00.qhauqnl.mongodb.net:27017",
+      "stateStr": "SECONDARY",
+      "health": 1,
+      "uptime": 478512,
+      "optimeDate": "2026-05-30T02:17:17.000Z",
+      "lastHeartbeatMessage": ""
+    },
+    {
+      "name": "ac-gshvivj-shard-00-01.qhauqnl.mongodb.net:27017",
+      "stateStr": "SECONDARY",
+      "health": 1,
+      "uptime": 477833,
+      "optimeDate": "2026-05-30T02:17:16.000Z",
+      "lastHeartbeatMessage": ""
+    },
+    {
+      "name": "ac-gshvivj-shard-00-02.qhauqnl.mongodb.net:27017",
+      "stateStr": "PRIMARY",
+      "health": 1,
+      "uptime": 478571,
+      "optimeDate": "2026-05-30T02:17:17.000Z",
+      "lastHeartbeatMessage": ""
+    }
+  ],
+  "managedCluster": false,
+  "warning": null,
+  "timestamp": "2026-05-30T02:17:17.967Z"
+}

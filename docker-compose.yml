@@ -1,4 +1,26 @@
 services:
+  backend:
+    build:
+      context: ./backend
+    environment:
+      PORT: 3001
+      DB_NAME: banco_nexus
+      MONGO_URI: mongodb://mongo-rs:27017,mongo-rs:27018,mongo-rs:27019/banco_nexus?replicaSet=rsBanco
+      JWT_SECRET: banco-nexus-local-secret
+      CORS_ORIGIN: http://localhost:8080,http://localhost:5173
+    ports:
+      - "3001:3001"
+    depends_on:
+      - mongo-rs
+
+  frontend:
+    build:
+      context: ./frontend
+    ports:
+      - "8080:80"
+    depends_on:
+      - backend
+
   mongo-rs:
     image: mongo:7
     container_name: banco_nexus_mongo_rs

@@ -1,0 +1,113 @@
+name: CI CD Docker Swarm
+
+on:
+  pull_request:
+    branches: [main]
+  push:
+    branches: [main]
+
+env:
+  REGISTRY: ghcr.io
+  BACKEND_IMAGE: ghcr.io/${{ github.repository }}/backend
+  FRONTEND_IMAGE: ghcr.io/${{ github.repository }}/frontend
+
+jobs:
+  validate:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: npm
+          cache-dependency-path: |
+            backend/package-lock.json
+            frontend/package-lock.json
+
+      - name: Backend dependencies
+        run: npm ci
+        working-directory: backend
+
+      - name: Backend tests
+        run: npm test
+        working-directory: backend
+
+      - name: Frontend dependencies
+        run: npm ci
+        working-directory: frontend
+
+      - name: Frontend build
+        run: npm run build
+        working-directory: frontend
+
+  build-and-deploy:
+    needs: validate
+    if: github.event_name == 'push'
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      packages: write
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Docker Buildx
+        uses: docker/setup-buildx-action@v3
+
+      - name: Login to GHCR
+        uses: docker/login-action@v3
+        with:
+          registry: ${{ env.REGISTRY }}
+          username: ${{ github.actor }}
+          password: ${{ github.token }}
+
+      - name: Build and push backend
+        uses: docker/build-push-action@v6
+        with:
+          context: backend
+          push: true
+          tags: |
+            ${{ env.BACKEND_IMAGE }}:${{ github.sha }}
+            ${{ env.BACKEND_IMAGE }}:latest
+
+      - name: Build and push frontend
+        uses: docker/build-push-action@v6
+        with:
+          context: frontend
+          push: true
+          tags: |
+            ${{ env.FRONTEND_IMAGE }}:${{ github.sha }}
+            ${{ env.FRONTEND_IMAGE }}:latest
+
+      - name: Rolling update on Swarm
+        env:
+          SWARM_MANAGER_HOST: ${{ secrets.SWARM_MANAGER_HOST }}
+          SWARM_USER: ${{ secrets.SWARM_USER }}
+          SSH_PRIVATE_KEY: ${{ secrets.SWARM_SSH_PRIVATE_KEY }}
+          GHCR_TOKEN: ${{ secrets.GHCR_TOKEN }}
+          GHCR_USER: ${{ github.actor }}
+          BACKEND_IMAGE_TAG: ${{ env.BACKEND_IMAGE }}:${{ github.sha }}
+          FRONTEND_IMAGE_TAG: ${{ env.FRONTEND_IMAGE }}:${{ github.sha }}
+        run: |
+          test -n "$SWARM_MANAGER_HOST"
+          test -n "$SWARM_USER"
+          test -n "$SSH_PRIVATE_KEY"
+          test -n "$GHCR_TOKEN"
+
+          mkdir -p ~/.ssh
+          printf '%s' "$SSH_PRIVATE_KEY" > ~/.ssh/id_ed25519
+          chmod 600 ~/.ssh/id_ed25519
+          ssh-keyscan -H "$SWARM_MANAGER_HOST" >> ~/.ssh/known_hosts
+
+          ssh "$SWARM_USER@$SWARM_MANAGER_HOST" \
+            "GHCR_TOKEN='$GHCR_TOKEN' GHCR_USER='$GHCR_USER' BACKEND_IMAGE_TAG='$BACKEND_IMAGE_TAG' FRONTEND_IMAGE_TAG='$FRONTEND_IMAGE_TAG' bash -s" <<'REMOTE'
+          set -euo pipefail
+          echo "$GHCR_TOKEN" | docker login ghcr.io -u "$GHCR_USER" --password-stdin
+          docker service update --with-registry-auth --image "$BACKEND_IMAGE_TAG" banco_nexus_backend
+          docker service update --with-registry-auth --image "$FRONTEND_IMAGE_TAG" banco_nexus_frontend
+          docker service ps banco_nexus_backend --no-trunc
+          docker service ps banco_nexus_frontend --no-trunc
+          REMOTE

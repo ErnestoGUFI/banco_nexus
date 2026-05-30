@@ -1,0 +1,71 @@
+version: "3.9"
+
+services:
+  backend:
+    image: ${BACKEND_IMAGE:-ghcr.io/owner/banco-nexus/backend:latest}
+    environment:
+      NODE_ENV: production
+      PORT: 3001
+      DB_NAME: banco_nexus
+      MONGO_URI_FILE: /run/secrets/mongo_uri
+      JWT_SECRET_FILE: /run/secrets/jwt_secret
+      JWT_EXPIRES_IN: 8h
+      CORS_ORIGIN: ${CORS_ORIGIN:-}
+    secrets:
+      - mongo_uri
+      - jwt_secret
+    networks:
+      - banco_nexus_overlay
+    deploy:
+      replicas: 2
+      update_config:
+        parallelism: 1
+        delay: 10s
+        order: start-first
+        failure_action: rollback
+      rollback_config:
+        parallelism: 1
+        delay: 5s
+      restart_policy:
+        condition: on-failure
+      placement:
+        max_replicas_per_node: 1
+        constraints:
+          - node.labels.banco_role == backend
+        preferences:
+          - spread: node.hostname
+
+  frontend:
+    image: ${FRONTEND_IMAGE:-ghcr.io/owner/banco-nexus/frontend:latest}
+    ports:
+      - target: 80
+        published: 80
+        protocol: tcp
+        mode: ingress
+    networks:
+      - banco_nexus_overlay
+    deploy:
+      replicas: 1
+      update_config:
+        parallelism: 1
+        delay: 5s
+        order: start-first
+        failure_action: rollback
+      restart_policy:
+        condition: on-failure
+      placement:
+        constraints:
+          - node.labels.banco_role == frontend
+        preferences:
+          - spread: node.hostname
+
+networks:
+  banco_nexus_overlay:
+    driver: overlay
+    attachable: true
+
+secrets:
+  mongo_uri:
+    external: true
+  jwt_secret:
+    external: true

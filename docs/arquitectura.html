@@ -1,0 +1,195 @@
+<!doctype html>
+<html lang="es">
+  <head>
+    <meta charset="utf-8" />
+    <title>Documento de Arquitectura - Banco Nexus</title>
+    <style>
+      @page {
+        margin: 24mm 18mm;
+      }
+
+      body {
+        color: #17211f;
+        font-family: Arial, sans-serif;
+        line-height: 1.45;
+        margin: 0;
+      }
+
+      h1,
+      h2 {
+        color: #14342f;
+      }
+
+      h1 {
+        font-size: 28px;
+        margin: 0 0 18px;
+      }
+
+      h2 {
+        border-bottom: 2px solid #ddd8cf;
+        font-size: 18px;
+        margin-top: 24px;
+        padding-bottom: 6px;
+      }
+
+      p,
+      li {
+        font-size: 12px;
+      }
+
+      .diagram {
+        border: 1px solid #d6d0c7;
+        border-radius: 8px;
+        display: grid;
+        gap: 10px;
+        grid-template-columns: repeat(4, 1fr);
+        margin: 16px 0;
+        padding: 14px;
+      }
+
+      .box {
+        background: #f8f5ef;
+        border: 1px solid #d6d0c7;
+        border-radius: 8px;
+        min-height: 74px;
+        padding: 10px;
+      }
+
+      .box strong {
+        color: #14342f;
+        display: block;
+        font-size: 12px;
+        margin-bottom: 5px;
+      }
+
+      .box span {
+        color: #52615c;
+        display: block;
+        font-size: 11px;
+      }
+
+      .wide {
+        grid-column: span 2;
+      }
+
+      code {
+        background: #f1ece3;
+        border-radius: 4px;
+        padding: 1px 4px;
+      }
+    </style>
+  </head>
+  <body>
+    <h1>Documento de Arquitectura - Banco Nexus</h1>
+
+    <h2>Objetivo</h2>
+    <p>
+      Banco Nexus simula una aplicacion bancaria enfocada en transferencias
+      monetarias seguras. La solucion usa un backend monolitico
+      contenedorizado, un frontend independiente y persistencia administrada en
+      MongoDB Atlas.
+    </p>
+
+    <h2>Topologia AWS</h2>
+    <div class="diagram">
+      <div class="box">
+        <strong>Usuario web</strong>
+        <span>Navegador</span>
+        <span>HTTP/HTTPS</span>
+      </div>
+      <div class="box">
+        <strong>EC2 Frontend</strong>
+        <span>Docker Swarm worker</span>
+        <span>Nginx + React</span>
+      </div>
+      <div class="box wide">
+        <strong>Red overlay</strong>
+        <span>banco_nexus_overlay</span>
+        <span>Comunicacion interna frontend-backend</span>
+      </div>
+      <div class="box">
+        <strong>EC2 Backend 1</strong>
+        <span>Manager/worker</span>
+        <span>Replica backend</span>
+      </div>
+      <div class="box">
+        <strong>EC2 Backend 2</strong>
+        <span>Worker</span>
+        <span>Replica backend</span>
+      </div>
+      <div class="box">
+        <strong>MongoDB Atlas</strong>
+        <span>Replica set administrado</span>
+        <span>Persistencia externa</span>
+      </div>
+      <div class="box">
+        <strong>GitHub Actions</strong>
+        <span>Build, push GHCR</span>
+        <span>Rolling update por SSH</span>
+      </div>
+    </div>
+
+    <h2>Componentes</h2>
+    <ul>
+      <li>
+        Frontend: React/Vite servido por Nginx. Nginx reenvia
+        <code>/api</code> y <code>/health</code> al servicio backend.
+      </li>
+      <li>
+        Backend: Node.js/Express monolitico con autenticacion JWT, generacion de
+        cuentas, beneficiarios, motor de transferencias y auditoria.
+      </li>
+      <li>
+        Base de datos: MongoDB Atlas, con datos persistentes fuera de EC2 y de
+        los contenedores.
+      </li>
+      <li>
+        Orquestacion: Docker Swarm con dos replicas del backend y rolling update
+        <code>start-first</code>.
+      </li>
+    </ul>
+
+    <h2>Seguridad y consistencia</h2>
+    <ul>
+      <li>Contrasenas con hash <code>bcrypt</code>.</li>
+      <li>Numero de cuenta inmutable con indice unico.</li>
+      <li>Validacion previa de cuenta destino con <code>/^\d{10}$/</code>.</li>
+      <li>
+        Transferencias con sesiones de MongoDB y <code>withTransaction</code>
+        para cargo, abono, movimientos y auditoria atomicos.
+      </li>
+      <li>Bitacora con accion, estado, usuario, cuenta, fecha y detalle.</li>
+    </ul>
+
+    <h2>Despliegue</h2>
+    <ol>
+      <li>Inicializar Swarm en la EC2 manager y unir dos workers.</li>
+      <li>Crear los secretos <code>mongo_uri</code> y <code>jwt_secret</code>.</li>
+      <li>Publicar imagenes <code>backend</code> y <code>frontend</code> en GHCR.</li>
+      <li>
+        Ejecutar <code>docker stack deploy -c deploy/swarm-stack.yml banco_nexus</code>.
+      </li>
+      <li>
+        En push a <code>main</code>, GitHub Actions publica imagenes y ejecuta
+        <code>docker service update</code>.
+      </li>
+    </ol>
+
+    <h2>Infraestructura como codigo</h2>
+    <p>
+      La plantilla <code>infra/aws/cloudformation.yml</code> crea la VPC,
+      subredes, security group y las tres EC2 requeridas. Despues,
+      <code>scripts/bootstrap-swarm.sh</code> inicializa Docker Swarm y etiqueta
+      los nodos para separar estrictamente backend y frontend.
+    </p>
+    <ul>
+      <li><code>banco_role=backend</code> para las dos EC2 de backend.</li>
+      <li><code>banco_role=frontend</code> para la EC2 dedicada de frontend.</li>
+      <li>
+        <code>deploy/swarm-stack.yml</code> usa estas etiquetas y
+        <code>max_replicas_per_node</code> para distribuir las dos replicas del
+        backend en nodos distintos.
+      </li>
+    </ul>
+  </body>
+</html>

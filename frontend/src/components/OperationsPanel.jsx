@@ -1,4 +1,5 @@
 import { BRANCHES } from "../constants/branches";
+import { blockInvalidAmountKey, sanitizeAmountInput } from "../utils/amountInput";
 
 function OperationCard({
   amount,
@@ -17,12 +18,15 @@ function OperationCard({
       <div className="section-title">{title}</div>
       <label className="card-label">{inputLabel}</label>
       <input
-        type="number"
+        type="text"
+        inputMode="decimal"
+        pattern="^[0-9]+([.,][0-9]{0,2})?$"
         min="1"
         className="amount-input"
         placeholder="0.00"
         value={amount}
-        onChange={(event) => onAmountChange(event.target.value)}
+        onKeyDown={blockInvalidAmountKey}
+        onChange={(event) => onAmountChange(sanitizeAmountInput(event.target.value))}
       />
       <button
         className={`button-secondary button-${tone}`}

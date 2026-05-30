@@ -52,3 +52,24 @@ frontend-start:
 
 frontend-build:
 	cd frontend && npm run build
+
+docker-app-build:
+	docker compose build backend frontend
+
+docker-app-start:
+	docker compose up -d mongo-rs backend frontend
+
+swarm-deploy:
+	docker stack deploy -c deploy/swarm-stack.yml banco_nexus
+
+swarm-status:
+	docker stack services banco_nexus
+
+aws-deploy-infra:
+	aws cloudformation deploy --stack-name banco-nexus-ec2 --template-file infra/aws/cloudformation.yml --parameter-overrides KeyName=$$KEY_NAME SshCidr=$$SSH_CIDR AppIngressCidr=$${APP_INGRESS_CIDR:-0.0.0.0/0}
+
+aws-outputs:
+	aws cloudformation describe-stacks --stack-name banco-nexus-ec2 --query "Stacks[0].Outputs"
+
+aws-delete-infra:
+	aws cloudformation delete-stack --stack-name banco-nexus-ec2

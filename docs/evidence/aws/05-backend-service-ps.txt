@@ -1,0 +1,11 @@
+ID                          NAME                        IMAGE                       NODE                           DESIRED STATE   CURRENT STATE                ERROR                       PORTS
+qvglgl4ozzlw63q0ydqdyob77   banco_nexus_backend.1       banco-nexus-backend:local   ip-10-42-20-230.ec2.internal   Running         Running about a minute ago                               
+ew9n4htmjrrrlgvvl4cj339i1    \_ banco_nexus_backend.1   banco-nexus-backend:local   ip-10-42-10-65.ec2.internal    Shutdown        Failed 4 minutes ago         "task: non-zero exit (1)"   
+kar88269kk8l4t0yeca1p4up3    \_ banco_nexus_backend.1   banco-nexus-backend:local   ip-10-42-10-65.ec2.internal    Shutdown        Failed 4 minutes ago         "task: non-zero exit (1)"   
+t0q2n20dlmyz8jnsbqwvytuea    \_ banco_nexus_backend.1   banco-nexus-backend:local   ip-10-42-10-65.ec2.internal    Shutdown        Failed 4 minutes ago         "task: non-zero exit (1)"   
+l3l7h3vgkbeuinbjyp0hyqkui    \_ banco_nexus_backend.1   banco-nexus-backend:local   ip-10-42-10-65.ec2.internal    Shutdown        Failed 4 minutes ago         "task: non-zero exit (1)"   
+krlro4zd6pej323fm6gh62ppp   banco_nexus_backend.2       banco-nexus-backend:local   ip-10-42-10-65.ec2.internal    Running         Running about a minute ago                               
+x3yxiw0lh834tgmoqs1ybno5o    \_ banco_nexus_backend.2   banco-nexus-backend:local   ip-10-42-20-230.ec2.internal   Shutdown        Failed 4 minutes ago         "task: non-zero exit (1)"   
+db13bsl71miobyu44gfuirsk8    \_ banco_nexus_backend.2   banco-nexus-backend:local   ip-10-42-20-230.ec2.internal   Shutdown        Failed 4 minutes ago         "task: non-zero exit (1)"   
+ih7wj8us5eggxrrsu1lzzoh4p    \_ banco_nexus_backend.2   banco-nexus-backend:local   ip-10-42-20-230.ec2.internal   Shutdown        Failed 4 minutes ago         "task: non-zero exit (1)"   
+mcja2mo771oh3y9r83jn2zqdz    \_ banco_nexus_backend.2   banco-nexus-backend:local   ip-10-42-20-230.ec2.internal   Shutdown        Failed 4 minutes ago         "task: non-zero exit (1)"   

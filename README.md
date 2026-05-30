@@ -1,240 +1,187 @@
 # Banco Nexus
 
-Banco Nexus es una aplicacion bancaria de practica para base de datos distribuida. El proyecto incluye:
+Sistema de transferencias bancarias con backend monolitico en Node.js/Express,
+frontend React desacoplado y persistencia en MongoDB compatible con MongoDB
+Atlas. El despliegue de produccion esta preparado para Docker Swarm sobre AWS
+EC2: dos replicas de backend y una instancia dedicada para el frontend.
 
-- Backend Node.js/Express con Mongoose.
-- Frontend React/Vite.
-- MongoDB Replica Set local de 3 nodos con Docker.
-- Scripts para seed, failover y simulacion de operaciones desde sucursales.
+## Modulos
 
-## Requisitos
+- Usuarios y autenticacion con JWT, registro, login y perfil editable.
+- Generacion automatica de cuenta de 10 digitos con prefijo `180`, secuencia de
+  6 digitos y digito verificador por suma modulo 10.
+- Dashboard con saldo disponible e historial de movimientos.
+- Alta de cuentas destino y transferencias validadas con transacciones ACID de
+  MongoDB.
+- Bitacora en base de datos para login, registro, alta de destino,
+  actualizacion de perfil y transferencias exitosas o fallidas.
 
-- Node.js 18 o superior.
-- npm.
-- Docker Desktop o Docker Engine con Docker Compose.
-- `make`.
+## Desarrollo local
 
-No necesitas instalar MongoDB localmente. El replica set usa Docker y expone los puertos `27017`, `27018` y `27019`.
-
-## Setup Desde Cero
-
-Ejecuta estos comandos desde la raiz del proyecto.
-
-1. Instalar dependencias del backend.
+Requisitos: Node.js 18+, npm, Docker y `make`.
 
 ```bash
 make backend-install
-```
-
-2. Instalar dependencias del frontend.
-
-```bash
 make frontend-install
-```
-
-3. Levantar el replica set de MongoDB con Docker.
-
-```bash
 make db-replica-start
-```
-
-4. Inicializar el replica set `rsBanco`.
-
-```bash
 make db-replica-init
-```
-
-Este comando se puede correr mas de una vez. Si el replica set ya existe, solo imprime el estado actual.
-
-5. Cargar datos iniciales.
-
-```bash
 make db-seed
-```
-
-6. Levantar el backend.
-
-```bash
-make backend-start
-```
-
-El backend queda en:
-
-```text
-http://localhost:3001
-```
-
-7. En otra terminal, levantar el frontend.
-
-```bash
-make frontend-start
-```
-
-El frontend queda normalmente en:
-
-```text
-http://localhost:5173
-```
-
-## Flujo Diario
-
-Si ya instalaste dependencias y ya inicializaste el replica set antes, normalmente basta con:
-
-```bash
-make db-replica-start
 make backend-start
 make frontend-start
 ```
 
-Si quieres reiniciar datos de prueba:
+URLs locales:
+
+- Frontend: `http://localhost:5173`
+- Backend: `http://localhost:3001`
+- Health: `http://localhost:3001/health`
+
+Usuario de prueba:
+
+```text
+ana.ruiz@email.com / Banco123!
+```
+
+Tambien puedes levantar frontend y backend en contenedores locales:
 
 ```bash
+make docker-app-build
+make db-replica-init
 make db-seed
+make docker-app-start
 ```
 
-Para detener MongoDB:
+El frontend contenedorizado queda en `http://localhost:8080`.
+
+## Variables de entorno
+
+Copia `.env.example` como referencia. En produccion, `MONGO_URI` debe apuntar a
+MongoDB Atlas u otro servicio administrado compatible con MongoDB. No se guarda
+persistencia financiera dentro de contenedores.
 
 ```bash
-make db-replica-stop
+PORT=3001
+DB_NAME=banco_nexus
+MONGO_URI=mongodb+srv://USER:PASSWORD@cluster.mongodb.net/banco_nexus?retryWrites=true&w=majority
+JWT_SECRET=change-me-with-a-long-random-secret
+JWT_EXPIRES_IN=8h
+CORS_ORIGIN=http://localhost:5173,http://localhost
 ```
 
-Los datos del replica set quedan persistidos en `.mongo-rs/`.
+## API principal
 
-## Probar Y Validar
+- `POST /api/auth/register`
+- `POST /api/auth/login`
+- `GET /api/dashboard`
+- `PATCH /api/me`
+- `POST /api/beneficiaries`
+- `POST /api/transfers`
+- `GET /api/transactions`
+- `GET /api/audit`
 
-### 1. Tests del backend
+Todas las rutas de `/api` excepto autenticacion requieren `Authorization:
+Bearer <token>`.
+
+## Docker Swarm en AWS EC2
+
+Topologia objetivo:
+
+- EC2 backend 1: nodo Swarm manager/worker.
+- EC2 backend 2: nodo Swarm worker.
+- EC2 frontend: nodo Swarm worker con el servicio frontend publicado en puerto
+  `80`.
+- MongoDB Atlas como base de datos administrada externa.
+
+Crear infraestructura con CloudFormation:
+
+```bash
+aws cloudformation deploy \
+  --stack-name banco-nexus-ec2 \
+  --template-file infra/aws/cloudformation.yml \
+  --parameter-overrides \
+    KeyName=<TU_KEY_PAIR> \
+    SshCidr=<TU_IP_PUBLICA>/32 \
+    AppIngressCidr=0.0.0.0/0
+```
+
+Ver salidas:
+
+```bash
+make aws-outputs
+```
+
+Inicializar Swarm y etiquetar nodos:
+
+```bash
+MANAGER_HOST=<BackendManagerPublicIp> \
+BACKEND_WORKER_HOST=<BackendWorkerPublicIp> \
+FRONTEND_WORKER_HOST=<FrontendWorkerPublicIp> \
+SSH_KEY=~/.ssh/<tu-key>.pem \
+scripts/bootstrap-swarm.sh
+```
+
+El stack fuerza la topologia con labels:
+
+- `banco_role=backend` para las 2 EC2 backend.
+- `banco_role=frontend` para la EC2 frontend.
+- `max_replicas_per_node: 1` para que las 2 replicas backend queden en nodos
+  distintos.
+
+Desplegar el stack con MongoDB Atlas y secrets Swarm:
+
+```bash
+MANAGER_HOST=<BackendManagerPublicIp> \
+SSH_KEY=~/.ssh/<tu-key>.pem \
+MONGO_URI='mongodb+srv://...' \
+JWT_SECRET='<secreto-largo>' \
+BACKEND_IMAGE='ghcr.io/<owner>/<repo>/backend:latest' \
+FRONTEND_IMAGE='ghcr.io/<owner>/<repo>/frontend:latest' \
+GHCR_USER='<usuario-ghcr>' \
+GHCR_TOKEN='<token-ghcr>' \
+scripts/deploy-swarm.sh
+```
+
+El stack usa red overlay `banco_nexus_overlay`, `replicas: 2` para el backend y
+rolling update con `order: start-first`.
+
+Mas detalle:
+
+- `infra/aws/README.md`
+- `docs/mongodb-atlas.md`
+- `docs/github-secrets.md`
+- `docs/entrega-checklist.md`
+
+## CI/CD
+
+El workflow `.github/workflows/ci-cd.yml` ejecuta tests y build en pull request.
+En push a `main`, construye y publica imagenes en GHCR y ordena al Swarm un
+rolling update de:
+
+- `banco_nexus_backend`
+- `banco_nexus_frontend`
+
+Secrets requeridos en GitHub:
+
+- `SWARM_MANAGER_HOST`
+- `SWARM_USER`
+- `SWARM_SSH_PRIVATE_KEY`
+- `GHCR_TOKEN`
+
+## Validacion
 
 ```bash
 make backend-test
-```
-
-Resultado esperado: todos los tests pasan.
-
-### 2. Build del frontend
-
-```bash
 make frontend-build
 ```
 
-Resultado esperado: Vite genera `frontend/dist` sin errores.
+Para comprobar el numero de cuenta, registra un usuario nuevo. La secuencia `34`
+debe generar `1800000346`.
 
-### 3. Validar seed
-
-```bash
-make db-seed
-```
-
-Resultado esperado:
-
-- 15 clientes insertados.
-- 15 cuentas insertadas.
-- 19 transacciones insertadas.
-- Lista de cuentas de prueba impresa en terminal.
-
-### 4. Validar health del replica set
-
-Con el backend corriendo:
+Para guardar evidencia del despliegue real:
 
 ```bash
-curl http://localhost:3001/health
+MANAGER_HOST=<BackendManagerPublicIp> \
+SSH_KEY=~/.ssh/<tu-key>.pem \
+FRONTEND_URL=http://<FrontendWorkerPublicIp> \
+scripts/collect-evidence.sh
 ```
-
-Resultado esperado:
-
-- `status` debe ser `OK`.
-- Debe existir un `primary`.
-- Deben aparecer 3 miembros en `members`.
-- Uno debe estar en `PRIMARY` y dos en `SECONDARY`.
-
-### 5. Validar lectura de una cuenta
-
-Con el backend corriendo:
-
-```bash
-curl http://localhost:3001/api/accounts/1000000001
-```
-
-Resultado esperado:
-
-- Respuesta con `accountNumber`, `balance`, `client` y `transactions`.
-- `accountNumber` debe ser `1000000001`.
-
-### 6. Validar failover automatizado
-
-```bash
-make db-replica-failover
-```
-
-Resultado esperado:
-
-- Muestra el estado de los 3 nodos.
-- Inserta una transaccion con `writeConcern: majority`.
-- Lee correctamente desde los secundarios.
-
-### 7. Cambiar el primario y volver a validar
-
-```bash
-make db-replica-stepdown
-```
-
-Espera unos segundos y vuelve a correr:
-
-```bash
-make db-replica-failover
-```
-
-Resultado esperado:
-
-- El primario cambia a otro nodo.
-- La escritura sigue funcionando.
-- La lectura desde secundarios sigue funcionando.
-
-### 8. Validar desde la interfaz
-
-Con backend y frontend corriendo:
-
-1. Abre `http://localhost:5173`.
-2. Busca la cuenta `1000000001`.
-3. Realiza un deposito o retiro.
-4. Verifica que el saldo y la tabla de transacciones se actualicen.
-5. Reinicia el backend o corre `make db-replica-stepdown`.
-6. Vuelve a buscar la cuenta y confirma que los datos persisten.
-
-## Comandos Utiles
-
-```bash
-make db-replica-logs
-```
-
-Muestra logs del contenedor Mongo.
-
-```bash
-make backend-concurrent-transactions
-```
-
-Simula operaciones concurrentes desde varias sucursales contra la API.
-
-```bash
-cd backend && npm run simulate-gdl
-```
-
-Ejecuta una operacion remota desde una sucursal especifica. Tambien existen `simulate-cdmx`, `simulate-mty`, `simulate-pue` y `simulate-tij`.
-
-## Variables De Entorno
-
-Backend:
-
-```bash
-MONGO_URI=mongodb://localhost:27017,localhost:27018,localhost:27019/banco_nexus?replicaSet=rsBanco
-DB_NAME=banco_nexus
-PORT=3001
-DB_LATENCY_WARNING_MS=1000
-```
-
-Si no defines variables, el proyecto usa esos valores por defecto.
-
-## Notas
-
-- No uses `mongod` ni `mongosh` locales para la practica normal. Usa los comandos `make db-replica-*`.
-- Si Docker dice que los puertos `27017`, `27018` o `27019` ya estan ocupados, detén cualquier Mongo local o contenedor viejo que los este usando.
-- Si el estado del replica set se ve raro, revisa logs con `make db-replica-logs` y vuelve a ejecutar `make db-replica-init`.

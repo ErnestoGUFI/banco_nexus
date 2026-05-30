@@ -1,0 +1,4 @@
+ID                            HOSTNAME                       STATUS    AVAILABILITY   MANAGER STATUS   ENGINE VERSION
+p7ocv920qno4hl0ui3l0quaga *   ip-10-42-10-65.ec2.internal    Ready     Active         Leader           25.0.14
+xomnatp3s4xtkdh5aouif2qis     ip-10-42-20-230.ec2.internal   Ready     Active                          25.0.14
+p16sh05ts89p8s7607mrxfni6     ip-10-42-30-40.ec2.internal    Ready     Active                          25.0.14
