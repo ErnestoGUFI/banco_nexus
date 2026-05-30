@@ -2,5 +2,6 @@ node_modules/
 dist/
 .DS_Store
 .mongo-rs/
+.local-run/
 .env
 *.log

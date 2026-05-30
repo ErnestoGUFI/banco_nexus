@@ -20,6 +20,27 @@ EC2: dos replicas de backend y una instancia dedicada para el frontend.
 
 Requisitos: Node.js 18+, npm, Docker y `make`.
 
+Forma rapida para levantar todo el proyecto local:
+
+```bash
+./run-project.sh
+```
+
+Esto inicia MongoDB replica set en Docker, carga datos de prueba, levanta el
+backend en `http://localhost:3001` y el frontend en `http://localhost:5173`.
+
+Para apagar todo:
+
+```bash
+./stop-project.sh
+```
+
+Si quieres borrar tambien los datos locales de MongoDB:
+
+```bash
+./stop-project.sh --clean-data
+```
+
 ```bash
 make backend-install
 make frontend-install

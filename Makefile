@@ -59,6 +59,12 @@ docker-app-build:
 docker-app-start:
 	docker compose up -d mongo-rs backend frontend
 
+project-start:
+	./run-project.sh
+
+project-stop:
+	./stop-project.sh
+
 swarm-deploy:
 	docker stack deploy -c deploy/swarm-stack.yml banco_nexus
 
