@@ -41,6 +41,19 @@ Si quieres borrar tambien los datos locales de MongoDB:
 ./stop-project.sh --clean-data
 ```
 
+Para mostrar en vivo que el proyecto cumple con AWS, EC2, Docker Swarm,
+MongoDB Atlas y CI/CD:
+
+```bash
+./show-compliance.sh
+```
+
+Tambien se puede ejecutar como:
+
+```bash
+make project-proof
+```
+
 ```bash
 make backend-install
 make frontend-install

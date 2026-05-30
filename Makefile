@@ -65,6 +65,9 @@ project-start:
 project-stop:
 	./stop-project.sh
 
+project-proof:
+	./show-compliance.sh
+
 swarm-deploy:
 	docker stack deploy -c deploy/swarm-stack.yml banco_nexus
 
