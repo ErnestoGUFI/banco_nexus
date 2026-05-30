@@ -36,17 +36,17 @@
 - [x] Workflow para push a main.
 - [x] Build y push de imagenes Docker.
 - [x] Rolling update remoto del Swarm.
-- [ ] Secrets configurados en GitHub.
-- [ ] Ejecucion real del workflow en GitHub.
+- [x] Secrets configurados en GitHub.
+- [x] Ejecucion real del workflow en GitHub.
 
 ## Evidencia para la presentacion
 
-- [ ] URL del repositorio.
-- [ ] PDF de arquitectura.
+- [x] URL del repositorio.
+- [x] PDF de arquitectura.
 - [ ] Captura de la app en navegador.
 - [ ] Captura de MongoDB Atlas con colecciones/datos.
 - [x] Captura o salida de 3 EC2 en AWS.
 - [x] Salida de `docker node ls`.
 - [x] Salida de `docker stack services banco_nexus`.
 - [x] Salida de `docker service ps banco_nexus_backend`.
-- [ ] Salida de GitHub Actions exitoso.
+- [x] Salida de GitHub Actions exitoso.

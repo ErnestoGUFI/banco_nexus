@@ -1,0 +1,17 @@
+GitHub Actions - CI CD Docker Swarm
+
+Repository: https://github.com/ErnestoGUFI/banco_nexus
+Run URL: https://github.com/ErnestoGUFI/banco_nexus/actions/runs/26676868022
+Status: success
+Branch: main
+Trigger: push
+
+Jobs:
+- validate: success
+- build-and-deploy: success
+
+Confirmed output:
+- Backend tests passed.
+- Frontend build passed.
+- Docker images were built and pushed to GHCR.
+- Docker Swarm rolling update completed successfully.
