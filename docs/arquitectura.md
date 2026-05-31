@@ -29,8 +29,9 @@ flowchart LR
   cuentas, beneficiarios, motor de transferencias y auditoria.
 - Base de datos: MongoDB Atlas, con datos persistentes fuera de las instancias
   EC2 y de los contenedores.
-- Orquestacion: Docker Swarm con dos replicas del backend y rolling update
-  `start-first` para reducir interrupciones.
+- Orquestacion: Docker Swarm con dos replicas del backend y rolling update. El
+  backend usa `stop-first` para respetar `max_replicas_per_node: 1` y mantener
+  una replica por nodo; el frontend usa `start-first` en su nodo dedicado.
 
 ## Seguridad y consistencia
 
@@ -48,7 +49,8 @@ flowchart LR
 3. Publicar imagenes `backend` y `frontend` en GHCR.
 4. Ejecutar `docker stack deploy -c deploy/swarm-stack.yml banco_nexus`.
 5. En cada push a `main`, GitHub Actions compila, publica imagenes y ejecuta
-   `docker service update` sobre los servicios del stack.
+   `docker service update` sobre los servicios del stack con despliegue
+   progresivo.
 
 ## Infraestructura como codigo
 

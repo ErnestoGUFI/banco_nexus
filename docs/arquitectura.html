@@ -144,8 +144,10 @@
         los contenedores.
       </li>
       <li>
-        Orquestacion: Docker Swarm con dos replicas del backend y rolling update
-        <code>start-first</code>.
+        Orquestacion: Docker Swarm con dos replicas del backend y rolling
+        update. El backend usa <code>stop-first</code> para respetar
+        <code>max_replicas_per_node: 1</code> y mantener una replica por nodo;
+        el frontend usa <code>start-first</code> en su nodo dedicado.
       </li>
     </ul>
 
@@ -171,7 +173,7 @@
       </li>
       <li>
         En push a <code>main</code>, GitHub Actions publica imagenes y ejecuta
-        <code>docker service update</code>.
+        <code>docker service update</code> con despliegue progresivo.
       </li>
     </ol>
 

@@ -176,7 +176,9 @@ scripts/deploy-swarm.sh
 ```
 
 El stack usa red overlay `banco_nexus_overlay`, `replicas: 2` para el backend y
-rolling update con `order: start-first`.
+rolling update progresivo. El backend usa `order: stop-first` para respetar
+`max_replicas_per_node: 1`; el frontend usa `order: start-first` en su nodo
+dedicado.
 
 Mas detalle:
 
