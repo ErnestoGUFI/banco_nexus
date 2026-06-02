@@ -86,7 +86,8 @@ print_github_evidence() {
   printf "Repositorio: https://github.com/%s\n\n" "$REPO"
 
   if command -v gh >/dev/null 2>&1; then
-    run_or_warn "GitHub Actions consultado" gh run list --repo "$REPO" --limit 3
+    run_or_warn "GitHub Actions exitosos consultados" \
+      gh run list --repo "$REPO" --workflow "CI CD Docker Swarm" --status success --limit 3
   else
     yellow "gh no esta instalado; abre manualmente: https://github.com/${REPO}/actions"
   fi
