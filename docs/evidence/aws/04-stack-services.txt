@@ -1,3 +1,3 @@
-ID             NAME                   MODE         REPLICAS               IMAGE                        PORTS
-dd365wrstn87   banco_nexus_backend    replicated   2/2 (max 1 per node)   banco-nexus-backend:local    
-xw0obh40hnqh   banco_nexus_frontend   replicated   1/1                    banco-nexus-frontend:local   *:80->80/tcp
+ID             NAME                   MODE         REPLICAS               IMAGE                                                                               PORTS
+psb58ytfxdj8   banco_nexus_backend    replicated   2/2 (max 1 per node)   ghcr.io/ernestogufi/banco_nexus/backend:8636e2aaba3df306dde273a41aa9333723719e4c    
+s76phx1qdq25   banco_nexus_frontend   replicated   1/1                    ghcr.io/ernestogufi/banco_nexus/frontend:8636e2aaba3df306dde273a41aa9333723719e4c   *:80->80/tcp
