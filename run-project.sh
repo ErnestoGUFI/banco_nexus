@@ -81,6 +81,26 @@ wait_for_mongo() {
   fail "MongoDB no respondio a tiempo. Revisa $LOG_DIR o ejecuta docker compose logs mongo-rs."
 }
 
+wait_for_mongo_nodes() {
+  local port=""
+  local output=""
+
+  for port in 27017 27018 27019; do
+    for _ in $(seq 1 45); do
+      output="$(compose exec -T mongo-rs mongosh --quiet --port "$port" --eval 'db.adminCommand({ ping: 1 }).ok' 2>/dev/null || true)"
+      if [[ "$output" == *"1"* ]]; then
+        break
+      fi
+      sleep 1
+    done
+
+    output="$(compose exec -T mongo-rs mongosh --quiet --port "$port" --eval 'db.adminCommand({ ping: 1 }).ok' 2>/dev/null || true)"
+    if [[ "$output" != *"1"* ]]; then
+      fail "MongoDB no respondio a tiempo en el puerto $port."
+    fi
+  done
+}
+
 wait_for_primary() {
   local output=""
 
@@ -194,6 +214,7 @@ main() {
   log "Levantando MongoDB replica set..."
   compose up -d mongo-rs
   wait_for_mongo
+  wait_for_mongo_nodes
 
   log "Inicializando replica set rsBanco..."
   compose exec -T mongo-rs mongosh --port 27017 /scripts/initializeReplicaSet.js >/dev/null

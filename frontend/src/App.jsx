@@ -69,6 +69,14 @@ const NAV_ITEMS = [
   { id: "configuracion", label: "Configuración", icon: Settings },
 ];
 
+const MOBILE_NAV_ITEMS = [
+  { id: "dashboard", label: "Inicio", icon: Home },
+  { id: "transferencias", label: "Enviar", icon: Send },
+  { id: "historial", label: "Reportes", icon: PieChart },
+  { id: "cuentas", label: "Cuentas", icon: CreditCard },
+  { id: "perfil", label: "Perfil", icon: User },
+];
+
 const PERIOD_OPTIONS = [
   { id: "day", label: "Hoy", shortLabel: "1D", days: 1 },
   { id: "week", label: "Últimos 7 dias", shortLabel: "7D", days: 7 },
@@ -955,6 +963,14 @@ export default function App() {
       </header>
 
       <div className="app-shell">
+        {mobileMenuOpen && (
+          <button
+            aria-label="Cerrar menu"
+            className="sidebar-backdrop"
+            type="button"
+            onClick={() => setMobileMenuOpen(false)}
+          />
+        )}
         <aside className={`sidebar ${mobileMenuOpen ? "sidebar-open" : ""}`}>
           <div className="sidebar-welcome">
             <div className="avatar-image">
@@ -1063,6 +1079,8 @@ export default function App() {
         </main>
       </div>
 
+      <MobileBottomNav currentSection={currentSection} isMenuOpen={mobileMenuOpen} onNavigate={selectSection} />
+
       {pendingTransfer && (
         <TransferConfirmModal
           loading={loading}
@@ -1087,6 +1105,30 @@ export default function App() {
         />
       )}
     </div>
+  );
+}
+
+function MobileBottomNav({ currentSection, isMenuOpen, onNavigate }) {
+  return (
+    <nav className={`mobile-bottom-nav ${isMenuOpen ? "is-hidden" : ""}`} aria-label="Navegacion movil">
+      {MOBILE_NAV_ITEMS.map((item) => {
+        const Icon = item.icon;
+        const isActive = currentSection === item.id;
+
+        return (
+          <button
+            aria-current={isActive ? "page" : undefined}
+            className={isActive ? "active" : ""}
+            key={item.id}
+            type="button"
+            onClick={() => onNavigate(item.id)}
+          >
+            <Icon size={18} />
+            <span>{item.label}</span>
+          </button>
+        );
+      })}
+    </nav>
   );
 }
 
