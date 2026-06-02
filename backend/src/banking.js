@@ -16,8 +16,13 @@ const ACCOUNT_PREFIX = "180";
 const ACCOUNT_NUMBER_REGEX = /^\d{10}$/;
 const ACCOUNT_SEQUENCE_LIMIT = 999999;
 const DEFAULT_INITIAL_BALANCE = 5000;
-const JWT_SECRET = envOrFile("JWT_SECRET", "banco-nexus-dev-secret");
+const DEFAULT_JWT_SECRET = "banco-nexus-dev-secret";
+const JWT_SECRET = envOrFile("JWT_SECRET", DEFAULT_JWT_SECRET);
 const JWT_EXPIRES_IN = process.env.JWT_EXPIRES_IN || "8h";
+
+if (process.env.NODE_ENV === "production" && JWT_SECRET === DEFAULT_JWT_SECRET) {
+  throw new Error("JWT_SECRET es obligatorio en produccion");
+}
 
 class BankingError extends Error {
   constructor(statusCode, message, code = "BANKING_ERROR") {
@@ -233,10 +238,7 @@ async function registerClient(payload, { req } = {}) {
   const phone = normalizeText(payload.phone);
   const email = normalizeEmail(payload.email);
   const password = typeof payload.password === "string" ? payload.password : "";
-  const initialBalance =
-    payload.initialBalance === undefined
-      ? DEFAULT_INITIAL_BALANCE
-      : assertPositiveAmount(payload.initialBalance);
+  const initialBalance = DEFAULT_INITIAL_BALANCE;
 
   if (!name || !phone || !email || !password) {
     throw new BankingError(
@@ -268,7 +270,7 @@ async function registerClient(payload, { req } = {}) {
       const counter = await Counter.findOneAndUpdate(
         { name: "account" },
         { $inc: { seq: 1 } },
-        { new: true, upsert: true, session },
+        { returnDocument: "after", upsert: true, session },
       );
       const accountNumber = generateAccountNumber(counter.seq);
 
@@ -472,7 +474,7 @@ async function updateProfile(client, payload, { req } = {}) {
   }
 
   const updatedClient = await Client.findByIdAndUpdate(client._id, update, {
-    new: true,
+    returnDocument: "after",
     runValidators: true,
   });
 

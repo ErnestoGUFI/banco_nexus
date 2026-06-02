@@ -19,6 +19,7 @@ const {
 
 function createApp() {
   const app = express();
+  const isProduction = process.env.NODE_ENV === "production";
   const corsOrigins = (process.env.CORS_ORIGIN || "")
     .split(",")
     .map((origin) => origin.trim())
@@ -26,11 +27,11 @@ function createApp() {
 
   app.use(
     cors({
-      origin: corsOrigins.length ? corsOrigins : true,
+      origin: corsOrigins.length ? corsOrigins : !isProduction,
       credentials: true,
     }),
   );
-  app.use(express.json());
+  app.use(express.json({ limit: "100kb" }));
 
   app.get("/health", async (_, res) => {
     const health = await getReplicaSetHealth();
@@ -163,22 +164,13 @@ function createApp() {
       }
 
       const client = await Client.findById(account.owner).lean();
-      const transactions = await Transaction.find({ accountNumber })
-        .sort({ date: -1 })
-        .lean();
 
       res.json({
         accountNumber: account.accountNumber,
-        accountType: account.accountType,
-        balance: account.balance,
-        openedAt: account.openedAt,
         active: account.active,
         client: {
           name: client?.name || "Desconocido",
-          email: client?.email,
-          phone: client?.phone,
         },
-        transactions: transactions.map(serializeTransaction),
       });
     } catch (error) {
       handleError(error, res);

@@ -118,7 +118,7 @@ async function getReplicaSetHealth() {
     isWritablePrimary: false,
     latencyMs: null,
     members: [],
-    managedCluster: Boolean(process.env.MONGO_URI),
+    managedCluster: Boolean(process.env.MONGO_URI || process.env.MONGO_URI_FILE),
   };
 
   if (mongoose.connection.readyState !== 1) {
