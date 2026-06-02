@@ -2369,7 +2369,10 @@ body,
 :root[data-theme="light"] .theme-mode-card,
 :root[data-theme="light"] .palette-option,
 :root[data-theme="light"] .audit-row,
-:root[data-theme="light"] .nexus-transaction-row {
+:root[data-theme="light"] .nexus-transaction-row,
+:root[data-theme="light"] .history-mobile-card,
+:root[data-theme="light"] .history-mobile-accounts span,
+:root[data-theme="light"] .history-mobile-balance {
   background: rgba(255, 255, 255, 0.72);
   border-color: var(--border);
 }
@@ -2786,6 +2789,7 @@ code {
   font-size: 0.8rem;
   font-weight: 800;
   gap: 0.38rem;
+  min-width: 0;
 }
 
 .filter-field-wide {
@@ -2799,6 +2803,7 @@ code {
   border-radius: calc(var(--radius) - 6px);
   color: var(--foreground);
   min-height: 40px;
+  min-width: 0;
   outline: none;
   padding: 0.55rem 0.65rem;
   width: 100%;
@@ -3048,6 +3053,88 @@ code {
 
 .table-wrap {
   overflow-x: auto;
+}
+
+.mobile-history-list {
+  display: none;
+}
+
+.history-mobile-card {
+  animation: item-in 0.34s ease both;
+  background: rgba(178, 181, 202, 0.055);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  display: grid;
+  gap: 0.75rem;
+  padding: 0.85rem;
+}
+
+.history-mobile-head {
+  align-items: flex-start;
+  display: grid;
+  gap: 0.7rem;
+  grid-template-columns: auto minmax(0, 1fr) auto;
+}
+
+.history-mobile-title {
+  display: grid;
+  gap: 0.36rem;
+  min-width: 0;
+}
+
+.history-mobile-title time {
+  color: var(--muted-foreground);
+  display: block;
+  font-size: 0.78rem;
+}
+
+.history-mobile-amount {
+  font-size: 1rem;
+  line-height: 1.15;
+  text-align: right;
+  white-space: nowrap;
+}
+
+.history-mobile-description {
+  color: var(--foreground);
+  font-weight: 760;
+  margin: 0;
+  overflow-wrap: anywhere;
+}
+
+.history-mobile-accounts {
+  display: grid;
+  gap: 0.55rem;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+}
+
+.history-mobile-accounts span,
+.history-mobile-balance {
+  background: rgba(178, 181, 202, 0.075);
+  border: 1px solid var(--border);
+  border-radius: calc(var(--radius) - 8px);
+  display: grid;
+  gap: 0.22rem;
+  min-width: 0;
+  padding: 0.68rem;
+}
+
+.history-mobile-accounts small,
+.history-mobile-balance span {
+  color: var(--muted-foreground);
+  font-size: 0.72rem;
+  font-weight: 850;
+}
+
+.history-mobile-accounts code,
+.history-mobile-balance strong {
+  color: var(--foreground);
+  overflow-wrap: anywhere;
+}
+
+.history-mobile-balance {
+  align-items: center;
+  grid-template-columns: minmax(0, 1fr) auto;
 }
 
 .data-table {
@@ -3396,6 +3483,10 @@ code {
     line-height: 1.04;
   }
 
+  .history-section .section-header h1 {
+    font-size: clamp(1.55rem, 8vw, 2rem);
+  }
+
   .section-header p {
     font-size: 0.92rem;
   }
@@ -3497,6 +3588,15 @@ code {
     grid-template-columns: minmax(0, 1fr);
   }
 
+  .history-filter-bar {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .history-filter-bar .filter-field-wide,
+  .history-filter-bar .filter-field:nth-child(2) {
+    grid-column: 1 / -1;
+  }
+
   .earnings-card {
     gap: 0.75rem;
   }
@@ -3583,6 +3683,48 @@ code {
     max-width: 100%;
     overflow-x: auto;
     padding-bottom: 0.2rem;
+  }
+
+  .history-table-wrap {
+    display: none;
+  }
+
+  .mobile-history-list {
+    display: grid;
+    gap: 0.75rem;
+  }
+
+  .history-mobile-card {
+    border-radius: var(--radius);
+    padding: 0.78rem;
+  }
+
+  .history-mobile-head {
+    grid-template-columns: auto minmax(0, 1fr);
+  }
+
+  .history-mobile-title .badge {
+    justify-self: start;
+    max-width: 100%;
+    white-space: normal;
+  }
+
+  .history-mobile-amount {
+    font-size: 1.22rem;
+    grid-column: 2;
+    text-align: left;
+  }
+
+  .history-mobile-accounts {
+    grid-template-columns: minmax(0, 1fr);
+  }
+
+  .history-mobile-balance {
+    grid-template-columns: minmax(0, 1fr);
+  }
+
+  .history-mobile-balance strong {
+    font-size: 1rem;
   }
 
   .data-table {
@@ -3771,6 +3913,10 @@ code {
 
   .section-header h1 {
     font-size: 1.82rem;
+  }
+
+  .history-section .section-header h1 {
+    font-size: 1.68rem;
   }
 
   .nexus-widget,

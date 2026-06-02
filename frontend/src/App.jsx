@@ -2156,14 +2156,14 @@ function HistoryView({ transactions }) {
   }
 
   return (
-    <div className="section-stack">
+    <div className="section-stack history-section">
       <SectionHeader title="Historial de Movimientos" description="Consulta todas las transacciones de tu cuenta" />
 
       <Panel
         title="Movimientos"
         description={`${filteredTransactions.length} de ${transactions.length} movimiento(s)`}
       >
-        <div className="filter-bar">
+        <div className="filter-bar history-filter-bar">
           <label className="filter-field filter-field-wide">
             Buscar
             <input
@@ -2197,45 +2197,52 @@ function HistoryView({ transactions }) {
         ) : filteredTransactions.length === 0 ? (
           <EmptyState icon={History} title="Sin resultados" text="Ajusta los filtros para ver mas movimientos." />
         ) : (
-          <div className="table-wrap">
-            <table className="data-table">
-              <thead>
-                <tr>
-                  <th>Fecha/Hora</th>
-                  <th>Tipo</th>
-                  <th>Concepto</th>
-                  <th>Cuenta Origen</th>
-                  <th>Cuenta Destino</th>
-                  <th>Monto</th>
-                  <th>Saldo Resultante</th>
-                </tr>
-              </thead>
-              <tbody>
-                {filteredTransactions.map((transaction) => {
-                  const credit = isCredit(transaction);
-                  return (
-                    <tr key={transaction.id}>
-                      <td>{formatDateTime(transaction.date)}</td>
-                      <td>
-                        <span className={`badge ${credit ? "badge-success" : "badge-danger"}`}>
-                          {credit ? <TrendingUp size={13} /> : <TrendingDown size={13} />}
-                          {typeLabel(transaction.type)}
-                        </span>
-                      </td>
-                      <td>{transaction.description}</td>
-                      <td><code>{transaction.sourceAccount || "-"}</code></td>
-                      <td><code>{transaction.destinationAccount || "-"}</code></td>
-                      <td className={credit ? "money-in" : "money-out"}>
-                        {credit ? "+" : "-"}
-                        {formatCurrency(transaction.amount)}
-                      </td>
-                      <td>{formatCurrency(transaction.resultingBalance)}</td>
-                    </tr>
-                  );
-                })}
-              </tbody>
-            </table>
-          </div>
+          <>
+            <div className="table-wrap history-table-wrap">
+              <table className="data-table">
+                <thead>
+                  <tr>
+                    <th>Fecha/Hora</th>
+                    <th>Tipo</th>
+                    <th>Concepto</th>
+                    <th>Cuenta Origen</th>
+                    <th>Cuenta Destino</th>
+                    <th>Monto</th>
+                    <th>Saldo Resultante</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {filteredTransactions.map((transaction) => {
+                    const credit = isCredit(transaction);
+                    return (
+                      <tr key={transaction.id}>
+                        <td>{formatDateTime(transaction.date)}</td>
+                        <td>
+                          <span className={`badge ${credit ? "badge-success" : "badge-danger"}`}>
+                            {credit ? <TrendingUp size={13} /> : <TrendingDown size={13} />}
+                            {typeLabel(transaction.type)}
+                          </span>
+                        </td>
+                        <td>{transaction.description}</td>
+                        <td><code>{transaction.sourceAccount || "-"}</code></td>
+                        <td><code>{transaction.destinationAccount || "-"}</code></td>
+                        <td className={credit ? "money-in" : "money-out"}>
+                          {credit ? "+" : "-"}
+                          {formatCurrency(transaction.amount)}
+                        </td>
+                        <td>{formatCurrency(transaction.resultingBalance)}</td>
+                      </tr>
+                    );
+                  })}
+                </tbody>
+              </table>
+            </div>
+            <div className="mobile-history-list" aria-label="Movimientos filtrados">
+              {filteredTransactions.map((transaction) => (
+                <HistoryMobileCard key={transaction.id} transaction={transaction} />
+              ))}
+            </div>
+          </>
         )}
       </Panel>
 
@@ -2245,6 +2252,49 @@ function HistoryView({ transactions }) {
         <MetricCard icon={CreditCard} label="Diferencia Neta" value={formatCurrency(filteredCreditTotal - filteredDebitTotal)} helper="Abonos - Cargos" />
       </section>
     </div>
+  );
+}
+
+function HistoryMobileCard({ transaction }) {
+  const credit = isCredit(transaction);
+
+  return (
+    <article className="history-mobile-card">
+      <div className="history-mobile-head">
+        <div className={`movement-icon ${credit ? "credit" : "debit"}`}>
+          {credit ? <TrendingUp size={17} /> : <TrendingDown size={17} />}
+        </div>
+        <div className="history-mobile-title">
+          <span className={`badge ${credit ? "badge-success" : "badge-danger"}`}>
+            {credit ? <TrendingUp size={13} /> : <TrendingDown size={13} />}
+            {typeLabel(transaction.type)}
+          </span>
+          <time>{formatDateTime(transaction.date)}</time>
+        </div>
+        <strong className={`history-mobile-amount ${credit ? "money-in" : "money-out"}`}>
+          {credit ? "+" : "-"}
+          {formatCurrency(transaction.amount)}
+        </strong>
+      </div>
+
+      <p className="history-mobile-description">{transaction.description || "Movimiento bancario"}</p>
+
+      <div className="history-mobile-accounts">
+        <span>
+          <small>Origen</small>
+          <code>{transaction.sourceAccount || "-"}</code>
+        </span>
+        <span>
+          <small>Destino</small>
+          <code>{transaction.destinationAccount || "-"}</code>
+        </span>
+      </div>
+
+      <div className="history-mobile-balance">
+        <span>Saldo resultante</span>
+        <strong>{formatCurrency(transaction.resultingBalance)}</strong>
+      </div>
+    </article>
   );
 }
 
