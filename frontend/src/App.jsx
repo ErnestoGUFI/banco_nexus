@@ -912,7 +912,6 @@ export default function App() {
             {loading ? <Loader2 className="spin" size={18} /> : authMode === "login" ? <LogIn size={18} /> : <UserPlus size={18} />}
             {loading ? "Procesando..." : authMode === "login" ? "Iniciar Sesion" : "Crear Cuenta"}
           </button>
-          <div className="test-credentials">Prueba local: ana.ruiz@email.com / Banco123!</div>
         </form>
       </div>
     );

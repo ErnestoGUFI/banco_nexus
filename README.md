@@ -70,11 +70,9 @@ URLs locales:
 - Backend: `http://localhost:3001`
 - Health: `http://localhost:3001/health`
 
-Usuario de prueba:
-
-```text
-ana.ruiz@email.com / Banco123!
-```
+Para pruebas locales, carga los datos seed con `make db-seed` y crea una
+cuenta desde la interfaz o consulta las cuentas de prueba directamente en tu
+entorno local.
 
 Tambien puedes levantar frontend y backend en contenedores locales:
 

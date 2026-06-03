@@ -582,11 +582,6 @@ body,
   color: var(--accent-contrast);
 }
 
-.test-credentials {
-  color: var(--muted-foreground);
-  font-size: 0.83rem;
-}
-
 .status-pill {
   align-items: center;
   background: rgba(178, 181, 202, 0.08);
